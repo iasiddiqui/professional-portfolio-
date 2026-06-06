@@ -1,0 +1,129 @@
+import { AiFeatureType } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
+import type { Request } from 'express';
+
+import {
+  aiInteractionRepository,
+  knowledgeBaseRepository,
+} from '../../repositories/ai.repository.js';
+import { siteContentRepository } from '../../repositories/site-content.repository.js';
+import { generateGeminiResponse } from '../../lib/gemini.js';
+import type { AskIshanResponseDto } from './ai.dto.js';
+import type { AskIshanInput } from './ai.validator.js';
+
+const ASK_ISHAN_CATEGORIES = ['about', 'services', 'faq', 'skills', 'experience', 'ai'];
+
+function getRequestMeta(req: Request) {
+  return {
+    ipAddress: req.ip ?? req.socket.remoteAddress ?? null,
+    userAgent: req.get('user-agent') ?? null,
+  };
+}
+
+async function buildKnowledgeContext(categories?: string[]): Promise<string> {
+  const entries = categories?.length
+    ? await knowledgeBaseRepository.findByCategories(categories)
+    : await knowledgeBaseRepository.findAllActive();
+
+  if (entries.length === 0) {
+    return 'No knowledge base entries are available yet.';
+  }
+
+  return entries
+    .map((entry) => `### ${entry.title} (${entry.category})\n${entry.content}`)
+    .join('\n\n');
+}
+
+async function buildSiteContext(): Promise<string> {
+  const site = await siteContentRepository.getSiteSettings();
+  if (!site) return '';
+
+  const parts = [
+    site.siteName ? `Site name: ${site.siteName}` : null,
+    site.siteDescription ? `Description: ${site.siteDescription}` : null,
+    site.contactEmail ? `Contact email: ${site.contactEmail}` : null,
+  ].filter(Boolean);
+
+  return parts.join('\n');
+}
+
+function buildConversationHistory(
+  records: Array<{ prompt: string; response: string }>
+): string {
+  if (records.length === 0) return '';
+
+  const chronological = [...records].reverse();
+  return chronological
+    .map((record, index) => `Turn ${index + 1}\nUser: ${record.prompt}\nAssistant: ${record.response}`)
+    .join('\n\n');
+}
+
+export class AiService {
+  async askIshan(input: AskIshanInput, req: Request): Promise<AskIshanResponseDto> {
+    const sessionId = input.sessionId ?? randomUUID();
+    const startedAt = Date.now();
+    const meta = getRequestMeta(req);
+
+    const [siteContext, knowledgeContext, historyRecords] = await Promise.all([
+      buildSiteContext(),
+      buildKnowledgeContext(ASK_ISHAN_CATEGORIES),
+      input.sessionId
+        ? aiInteractionRepository.findRecentBySession(sessionId, AiFeatureType.ASK_ISHAN, 4)
+        : Promise.resolve([]),
+    ]);
+
+    const systemPrompt = [
+      'You are "Ask Ishan AI", the official AI assistant for Ishan\'s professional portfolio.',
+      'Answer questions about Ishan\'s skills, services, experience, projects, and availability.',
+      'Use only the provided knowledge base and site context. If information is missing, say so honestly.',
+      'Be concise, professional, warm, and helpful. Do not invent credentials or project details.',
+      'When relevant, suggest visiting the portfolio pages or contacting Ishan directly.',
+      '',
+      'Site context:',
+      siteContext || 'Not available.',
+      '',
+      'Knowledge base:',
+      knowledgeContext,
+    ].join('\n');
+
+    const history = buildConversationHistory(historyRecords);
+    const userPrompt = [
+      history ? `Previous conversation:\n${history}\n` : '',
+      `User question:\n${input.message}`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const { text, model } = await generateGeminiResponse({ systemPrompt, userPrompt });
+
+    const record = await aiInteractionRepository.create({
+      feature: AiFeatureType.ASK_ISHAN,
+      prompt: input.message,
+      response: text,
+      systemPrompt,
+      sessionId,
+      ipAddress: meta.ipAddress,
+      userAgent: meta.userAgent,
+      model,
+      latencyMs: Date.now() - startedAt,
+      metadata: {
+        knowledgeCategories: ASK_ISHAN_CATEGORIES,
+        historyCount: historyRecords.length,
+      },
+    });
+
+    return {
+      id: record.id,
+      sessionId,
+      message: input.message,
+      reply: text,
+      model,
+    };
+  }
+
+  async listInteractions(query: { page: number; limit: number; skip: number; feature?: AiFeatureType }) {
+    return aiInteractionRepository.findMany(query);
+  }
+}
+
+export const aiService = new AiService();

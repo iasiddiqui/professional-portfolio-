@@ -1,0 +1,377 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum RoleName {
+  ADMIN
+  EDITOR
+  USER
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  IN_PROGRESS
+  CLOSED
+}
+
+enum MediaType {
+  IMAGE
+  DOCUMENT
+  VIDEO
+  OTHER
+}
+
+enum ContentFormat {
+  MDX
+  MARKDOWN
+}
+
+enum AnalyticsEventType {
+  VISIT
+  PAGE_VIEW
+  CONTACT_REQUEST
+  DOWNLOAD
+}
+
+enum AiFeatureType {
+  ASK_ISHAN
+  PROJECT_ESTIMATOR
+}
+
+// ─── Auth & Users ─────────────────────────────────────────────────────────────
+
+model Role {
+  id          String   @id @default(cuid())
+  name        RoleName @unique
+  label       String
+  description String?
+  permissions Json     @default("[]")
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  password      String
+  avatar        String?
+  roleId        String
+  isActive      Boolean        @default(true)
+  role          Role           @relation(fields: [roleId], references: [id])
+  sessions      Session[]
+  refreshTokens RefreshToken[]
+  blogPosts     BlogPost[]
+  leadNotes     LeadNote[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([email])
+  @@index([roleId])
+  @@index([isActive])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  tokenHash    String   @unique
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  lastActiveAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  familyId  String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@index([revokedAt])
+}
+
+// ─── Projects ─────────────────────────────────────────────────────────────────
+
+model ProjectCategory {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  projects    Project[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Project {
+  id               String          @id @default(cuid())
+  title            String
+  slug             String          @unique
+  shortDescription String
+  description      String          @db.Text
+  techStack        String[]
+  architecture     String          @db.Text
+  githubUrl        String?
+  liveUrl          String?
+  featured         Boolean         @default(false)
+  status           ProjectStatus   @default(DRAFT)
+  categoryId       String?
+  category         ProjectCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  media            Media[]
+  tags             ProjectTag[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([slug])
+  @@index([status])
+  @@index([featured])
+  @@index([categoryId])
+}
+
+// ─── Blog ─────────────────────────────────────────────────────────────────────
+
+model BlogCategory {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?
+  posts       BlogPost[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model BlogPost {
+  id                 String        @id @default(cuid())
+  title              String
+  slug               String        @unique
+  excerpt            String
+  content            String        @db.Text
+  contentFormat      ContentFormat @default(MDX)
+  featuredImage      String?
+  readingTimeMinutes Int           @default(1)
+  published          Boolean       @default(false)
+  publishedAt        DateTime?
+  seoTitle           String?
+  seoDescription     String?
+  categoryId         String?
+  authorId           String?
+  category           BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  author             User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  tags               BlogPostTag[]
+  media              Media[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([slug])
+  @@index([published])
+  @@index([publishedAt])
+  @@index([categoryId])
+  @@index([authorId])
+}
+
+// ─── Tags ─────────────────────────────────────────────────────────────────────
+
+model Tag {
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  projects  ProjectTag[]
+  blogPosts BlogPostTag[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model ProjectTag {
+  projectId String
+  tagId     String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, tagId])
+  @@index([tagId])
+}
+
+model BlogPostTag {
+  blogPostId String
+  tagId      String
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogPostId, tagId])
+  @@index([tagId])
+}
+
+// ─── CRM & Content ────────────────────────────────────────────────────────────
+
+model Lead {
+  id          String     @id @default(cuid())
+  name        String
+  email       String
+  company     String?
+  budget      String?
+  projectType String?
+  message     String     @db.Text
+  status      LeadStatus @default(NEW)
+  notes       LeadNote[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model LeadNote {
+  id        String   @id @default(cuid())
+  leadId    String
+  content   String   @db.Text
+  authorId  String?
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leadId])
+  @@index([authorId])
+}
+
+model Testimonial {
+  id          String   @id @default(cuid())
+  clientName  String
+  company     String?
+  designation String?
+  content     String   @db.Text
+  rating      Int?
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([featured])
+}
+
+model Resume {
+  id        String   @id @default(cuid())
+  title     String
+  fileUrl   String
+  version   String
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+model KnowledgeBase {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  category  String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([active])
+}
+
+model AiInteraction {
+  id           String        @id @default(cuid())
+  feature      AiFeatureType
+  prompt       String        @db.Text
+  response     String        @db.Text
+  systemPrompt String?       @db.Text
+  metadata     Json?
+  sessionId    String?
+  ipAddress    String?
+  userAgent    String?
+  model        String?
+  tokensUsed   Int?
+  latencyMs    Int?
+  createdAt    DateTime      @default(now())
+
+  @@index([feature])
+  @@index([sessionId])
+  @@index([createdAt])
+  @@index([ipAddress])
+}
+
+// ─── Media & Assets ───────────────────────────────────────────────────────────
+
+model Media {
+  id          String    @id @default(cuid())
+  filename    String
+  url         String
+  mimeType    String
+  size        Int
+  type        MediaType
+  alt         String?
+  width       Int?
+  height      Int?
+  isThumbnail Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  projectId   String?
+  blogPostId  String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  blogPost    BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([type])
+  @@index([projectId])
+  @@index([blogPostId])
+  @@index([isThumbnail])
+}
+
+// ─── Analytics & Settings ─────────────────────────────────────────────────────
+
+model Analytics {
+  id        String             @id @default(cuid())
+  type      AnalyticsEventType
+  path      String?
+  referrer  String?
+  metadata  Json?
+  createdAt DateTime           @default(now())
+
+  @@index([type])
+  @@index([path])
+  @@index([createdAt])
+}
+
+model SiteSettings {
+  id              String   @id @default("default")
+  siteName        String
+  siteDescription String?
+  logoUrl         String?
+  faviconUrl      String?
+  contactEmail    String?
+  socialLinks     Json?
+  seoDefaults     Json?
+  maintenanceMode Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+}

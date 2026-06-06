@@ -1,0 +1,37 @@
+import { Router } from 'express';
+
+import { contactRateLimiter } from '../../middlewares/rate-limit.middleware.js';
+import { validateBody, validateParams, validateQuery } from '../../middlewares/validate.middleware.js';
+import { publicController } from './public.controller.js';
+import {
+  publicContactSchema,
+  publicListQuerySchema,
+  publicSlugParamSchema,
+} from './public.validator.js';
+
+const publicRouter = Router();
+
+publicRouter.get('/site', publicController.getSite);
+publicRouter.get('/about', publicController.getAbout);
+publicRouter.get('/services', publicController.getServices);
+publicRouter.get('/testimonials', publicController.getTestimonials);
+publicRouter.get('/resume', publicController.getResume);
+
+publicRouter.get('/projects', validateQuery(publicListQuerySchema), publicController.listProjects);
+publicRouter.get(
+  '/projects/:slug',
+  validateParams(publicSlugParamSchema),
+  publicController.getProject
+);
+
+publicRouter.get('/blog', validateQuery(publicListQuerySchema), publicController.listBlogPosts);
+publicRouter.get('/blog/:slug', validateParams(publicSlugParamSchema), publicController.getBlogPost);
+
+publicRouter.post(
+  '/contact',
+  contactRateLimiter,
+  validateBody(publicContactSchema),
+  publicController.submitContact
+);
+
+export { publicRouter };
