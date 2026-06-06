@@ -12,9 +12,16 @@ const FORWARD_RESPONSE_HEADERS = [
   'location',
 ];
 
-async function proxyRequest(request: NextRequest, pathSegments: string[]) {
+function buildUpstreamUrl(pathSegments: string[], search: string): string {
   const path = pathSegments.join('/');
-  const targetUrl = `${SERVER_API_URL}/${path}${request.nextUrl.search}`;
+  const baseUrl = SERVER_API_URL.replace(/\/$/, '');
+  // Browser calls /api/proxy/v1/... — strip the duplicate v1 prefix before joining with /api/v1 base.
+  const upstreamPath = path.startsWith('v1/') ? path.slice(3) : path;
+  return `${baseUrl}/${upstreamPath}${search}`;
+}
+
+async function proxyRequest(request: NextRequest, pathSegments: string[]) {
+  const targetUrl = buildUpstreamUrl(pathSegments, request.nextUrl.search);
 
   const headers = new Headers();
 
@@ -32,7 +39,8 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
   };
 
   if (!['GET', 'HEAD'].includes(request.method)) {
-    init.body = await request.text();
+    // Preserve binary bodies (multipart file uploads, etc.) — request.text() corrupts images.
+    init.body = await request.arrayBuffer();
   }
 
   const upstream = await fetch(targetUrl, init);

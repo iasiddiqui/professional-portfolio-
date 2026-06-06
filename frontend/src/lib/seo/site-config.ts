@@ -2,7 +2,7 @@ import { cache } from 'react';
 
 import { APP_URL } from '@/constants/api';
 import { publicApi } from '@/lib/public-api';
-import { resolveMediaUrl } from '@/lib/media-url';
+import { resolveAbsoluteMediaUrl } from '@/lib/media-url';
 import { SEO_DEFAULTS, absoluteUrl } from '@/lib/seo/config';
 
 export interface SeoSiteConfig {
@@ -21,7 +21,7 @@ export const getSeoSiteConfig = cache(async (): Promise<SeoSiteConfig> => {
 
   const siteName = site?.siteName ?? SEO_DEFAULTS.siteName;
   const description = site?.siteDescription ?? SEO_DEFAULTS.description;
-  const logoUrl = site?.logoUrl ? resolveMediaUrl(site.logoUrl) ?? undefined : undefined;
+  const logoUrl = site?.logoUrl ? resolveAbsoluteMediaUrl(site.logoUrl) ?? undefined : undefined;
 
   return {
     siteName,

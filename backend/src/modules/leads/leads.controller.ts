@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { HTTP_STATUS } from '../../constants/http-status.js';
 import { asyncHandler } from '../../utils/async-handler.js';
 import { buildPaginationMeta, sendPaginated, sendSuccess } from '../../utils/api-response.js';
+import { getValidatedQuery } from '../../utils/validated-request.js';
 import { leadsService } from './leads.service.js';
 import type {
   CreateLeadInput,
@@ -14,7 +15,7 @@ import type {
 
 export class LeadsController {
   list = asyncHandler(async (req: Request, res: Response) => {
-    const result = await leadsService.list(req.query as unknown as LeadListQueryInput);
+    const result = await leadsService.list(getValidatedQuery<LeadListQueryInput>(req));
     sendPaginated(res, result.items, buildPaginationMeta(result.page, result.limit, result.total));
   });
 

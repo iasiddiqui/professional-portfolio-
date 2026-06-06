@@ -20,13 +20,33 @@ function parseImageHostnames(): string[] {
 
 const imageHostnames = parseImageHostnames();
 
+function getApiOrigin(): string {
+  return (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1').replace(/\/api\/v1\/?$/, '');
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  devIndicators: false,
   output: 'standalone',
   outputFileTracingRoot: path.join(__dirname),
+  async rewrites() {
+    const apiOrigin = getApiOrigin();
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: `${apiOrigin}/uploads/:path*`,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/uploads/**',
+      },
       ...imageHostnames.flatMap((hostname) => [
         {
           protocol: 'http' as const,

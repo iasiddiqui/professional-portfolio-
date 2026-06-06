@@ -1,5 +1,7 @@
 'use client';
 
+import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
 import {
   Controller,
   type Control,
@@ -7,6 +9,7 @@ import {
   type FieldValues,
 } from 'react-hook-form';
 
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,6 +36,8 @@ export function FormField<T extends FieldValues>({
 }: FormFieldProps<T>) {
   const fieldId = String(name);
   const errorId = `${fieldId}-error`;
+  const [showPassword, setShowPassword] = useState(false);
+  const isPasswordField = type === 'password';
 
   return (
     <Controller
@@ -49,6 +54,29 @@ export function FormField<T extends FieldValues>({
               aria-describedby={fieldState.error ? errorId : undefined}
               {...field}
             />
+          ) : isPasswordField ? (
+            <div className="relative">
+              <Input
+                id={fieldId}
+                type={showPassword ? 'text' : 'password'}
+                placeholder={placeholder}
+                className="pr-10"
+                aria-invalid={fieldState.invalid || undefined}
+                aria-describedby={fieldState.error ? errorId : undefined}
+                {...field}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-10 w-10 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
           ) : (
             <Input
               id={fieldId}

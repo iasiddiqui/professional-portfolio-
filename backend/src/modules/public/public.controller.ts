@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { HTTP_STATUS } from '../../constants/http-status.js';
 import { asyncHandler } from '../../utils/async-handler.js';
 import { buildPaginationMeta, sendPaginated, sendSuccess } from '../../utils/api-response.js';
+import { getValidatedQuery } from '../../utils/validated-request.js';
 import { publicService } from './public.service.js';
 import type { PublicContactInput, PublicListQueryInput } from './public.validator.js';
 
@@ -33,7 +34,7 @@ export class PublicController {
   });
 
   listProjects = asyncHandler(async (req: Request, res: Response) => {
-    const result = await publicService.listProjects(req.query as unknown as PublicListQueryInput);
+    const result = await publicService.listProjects(getValidatedQuery<PublicListQueryInput>(req));
     sendPaginated(res, result.items, buildPaginationMeta(result.page, result.limit, result.total));
   });
 
@@ -43,7 +44,7 @@ export class PublicController {
   });
 
   listBlogPosts = asyncHandler(async (req: Request, res: Response) => {
-    const result = await publicService.listBlogPosts(req.query as unknown as PublicListQueryInput);
+    const result = await publicService.listBlogPosts(getValidatedQuery<PublicListQueryInput>(req));
     sendPaginated(res, result.items, buildPaginationMeta(result.page, result.limit, result.total));
   });
 

@@ -5,12 +5,12 @@ import { Controller, useWatch, type UseFormReturn } from 'react-hook-form';
 
 import { FormCheckboxField } from '@/components/forms/form-checkbox-field';
 import { FormField } from '@/components/forms/form-field';
-import { FormSelectField } from '@/components/forms/form-select-field';
 import { FeaturedImageField, SeoFields } from '@/components/editor';
 import { MdxEditor } from '@/components/editor/mdx-editor';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { CategorySelector } from '@/features/blog/components/category-selector';
 import { TagSelector } from '@/features/blog/components/tag-selector';
 import type { BlogFormValues } from '@/features/blog/schemas/blog.schemas';
 import { useBlogCategories, useTags } from '@/features/blog/hooks/use-blog';
@@ -43,11 +43,6 @@ export function BlogForm({ form, onSubmit, submitLabel, isSubmitting = false }: 
       form.setValue('slug', slugify(title), { shouldDirty: true });
     }
   }, [form, slug, title]);
-
-  const categoryOptions = [
-    { value: '__none__', label: 'No category' },
-    ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
-  ];
 
   const handleSubmit = form.handleSubmit(async (values) => {
     await onSubmit(values);
@@ -115,12 +110,17 @@ export function BlogForm({ form, onSubmit, submitLabel, isSubmitting = false }: 
               ) : (
                 <p className="text-sm text-muted-foreground">Draft only — publish permission required.</p>
               )}
-              <FormSelectField
+              <Controller
                 control={form.control}
                 name="categoryId"
-                label="Category"
-                options={categoryOptions}
-                placeholder="Select category"
+                render={({ field, fieldState }) => (
+                  <CategorySelector
+                    categories={categories}
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={fieldState.error?.message}
+                  />
+                )}
               />
               <div className="space-y-2">
                 <Label>Tags</Label>

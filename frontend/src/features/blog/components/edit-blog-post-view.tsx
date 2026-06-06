@@ -10,6 +10,7 @@ import { BlogForm } from '@/features/blog/components/blog-form';
 import { useUpdateBlogPost } from '@/features/blog/hooks/use-blog-mutations';
 import { useBlogPost } from '@/features/blog/hooks/use-blog';
 import {
+  blogFormDefaultValues,
   blogFormSchema,
   toBlogFormValues,
   toBlogPayload,
@@ -26,7 +27,7 @@ export function EditBlogPostView({ postId }: EditBlogPostViewProps) {
   const router = useRouter();
   const { data: post, isLoading, isError, refetch } = useBlogPost(postId);
   const updateMutation = useUpdateBlogPost(postId);
-  const form = useZodForm(blogFormSchema);
+  const form = useZodForm(blogFormSchema, blogFormDefaultValues);
 
   useEffect(() => {
     if (post) form.reset(toBlogFormValues(post));

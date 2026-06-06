@@ -3,7 +3,7 @@ import type { SeoSiteConfig } from '@/lib/seo/site-config';
 import type { PublicBlogPost } from '@/features/public/types/public.types';
 import type { PublicProject } from '@/features/public/types/public.types';
 import { ROUTES } from '@/constants/routes';
-import { resolveMediaUrl } from '@/lib/media-url';
+import { resolveAbsoluteMediaUrl } from '@/lib/media-url';
 
 type JsonLd = Record<string, unknown>;
 
@@ -58,7 +58,7 @@ export function buildBlogPostingSchema(
   post: PublicBlogPost,
   site: SeoSiteConfig
 ): JsonLd {
-  const image = resolveMediaUrl(post.featuredImage);
+  const image = resolveAbsoluteMediaUrl(post.featuredImage);
 
   return {
     '@context': 'https://schema.org',
@@ -83,7 +83,7 @@ export function buildBlogPostingSchema(
 }
 
 export function buildProjectSchema(project: PublicProject, site: SeoSiteConfig): JsonLd {
-  const image = resolveMediaUrl(project.thumbnail?.url ?? null);
+  const image = resolveAbsoluteMediaUrl(project.thumbnail?.url ?? null);
 
   return {
     '@context': 'https://schema.org',

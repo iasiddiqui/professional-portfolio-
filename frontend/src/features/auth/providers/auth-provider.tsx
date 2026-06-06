@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { ROUTES } from '@/constants/routes';
-import { getErrorMessage } from '@/lib/errors';
+import { getErrorMessage, isRateLimitError, isUnauthorizedError } from '@/lib/errors';
 import {
   authService,
   type ChangePasswordPayload,
@@ -55,8 +55,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const me = await authService.getMe();
       setUser(me);
-    } catch {
-      clearAuth();
+    } catch (error) {
+      if (isRateLimitError(error)) {
+        toast.error('Too many requests. Please wait a moment and refresh.');
+        return;
+      }
+
+      if (isUnauthorizedError(error)) {
+        clearAuth();
+      }
     }
   }, [clearAuth, setUser]);
 

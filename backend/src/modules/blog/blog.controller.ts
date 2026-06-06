@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { HTTP_STATUS } from '../../constants/http-status.js';
 import { asyncHandler } from '../../utils/async-handler.js';
 import { buildPaginationMeta, sendPaginated, sendSuccess } from '../../utils/api-response.js';
+import { getValidatedQuery } from '../../utils/validated-request.js';
 import { blogService } from './blog.service.js';
 import type {
   BlogListQueryInput,
@@ -13,7 +14,7 @@ import type {
 
 export class BlogController {
   list = asyncHandler(async (req: Request, res: Response) => {
-    const result = await blogService.list(req.query as unknown as BlogListQueryInput);
+    const result = await blogService.list(getValidatedQuery<BlogListQueryInput>(req));
     sendPaginated(res, result.items, buildPaginationMeta(result.page, result.limit, result.total));
   });
 

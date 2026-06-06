@@ -13,7 +13,7 @@ const mediaRouter = Router();
 mediaRouter.post(
   '/upload',
   authenticate,
-  requireAnyPermission(PERMISSIONS.MEDIA_WRITE, PERMISSIONS.PROJECTS_WRITE),
+  requireAnyPermission(PERMISSIONS.MEDIA_WRITE, PERMISSIONS.PROJECTS_WRITE, PERMISSIONS.BLOG_WRITE),
   uploadSingleImage,
   validateQuery(uploadMediaQuerySchema),
   mediaController.upload

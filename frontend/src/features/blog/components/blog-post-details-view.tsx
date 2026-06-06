@@ -22,6 +22,7 @@ import { MODULE_PERMISSIONS } from '@/constants/permissions';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/features/auth/providers/auth-provider';
 import { formatDateTime } from '@/utils/date';
+import { resolveMediaUrl } from '@/lib/media-url';
 
 interface BlogPostDetailsViewProps {
   postId: string;
@@ -97,7 +98,14 @@ export function BlogPostDetailsView({ postId }: BlogPostDetailsViewProps) {
           {post.featuredImage ? (
             <Card className="overflow-hidden">
               <div className="relative aspect-[16/9]">
-                <Image src={post.featuredImage} alt={post.title} fill className="object-cover" unoptimized priority />
+                <Image
+                  src={resolveMediaUrl(post.featuredImage)!}
+                  alt={post.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1280px) 100vw, 66vw"
+                  priority
+                />
               </div>
             </Card>
           ) : null}

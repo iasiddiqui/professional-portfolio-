@@ -1,8 +1,8 @@
 'use client';
 
-import { Plus, Search, Tags, FolderOpen } from 'lucide-react';
+import { Eye, EyeOff, Plus, Search, Tags, Trash2, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
@@ -19,12 +19,17 @@ import {
 } from '@/components/ui/select';
 import { BlogModuleShell } from '@/features/admin/components/module-shells';
 import { BlogPostsTable } from '@/features/blog/components/blog-posts-table';
+import { BulkDeleteBlogPostsDialog } from '@/features/blog/components/bulk-delete-blog-posts-dialog';
 import {
   DeleteBlogPostDialog,
   useDeleteBlogPostDialog,
 } from '@/features/blog/components/delete-blog-post-dialog';
 import { BLOG_MODULE_CONFIG } from '@/features/blog/config/blog.config';
 import { useBlogPosts } from '@/features/blog/hooks/use-blog';
+import {
+  useBulkPublishBlogPosts,
+  usePublishBlogPostMutation,
+} from '@/features/blog/hooks/use-blog-mutations';
 import { MODULE_PERMISSIONS } from '@/constants/permissions';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/features/auth/providers/auth-provider';
@@ -33,11 +38,17 @@ export function BlogModuleView() {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission(MODULE_PERMISSIONS.blog.write);
   const canDelete = hasPermission(MODULE_PERMISSIONS.blog.delete);
+  const canPublish = hasPermission(MODULE_PERMISSIONS.blog.publish);
+  const canBulkSelect = canPublish || canDelete;
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [publishedFilter, setPublishedFilter] = useState<'ALL' | 'true' | 'false'>('ALL');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const deleteDialog = useDeleteBlogPostDialog();
+  const publishMutation = usePublishBlogPostMutation();
+  const bulkPublishMutation = useBulkPublishBlogPosts();
 
   const queryParams = useMemo(
     () => ({
@@ -50,6 +61,24 @@ export function BlogModuleView() {
   );
 
   const { data, isLoading, isError, refetch } = useBlogPosts(queryParams);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [page, publishedFilter, search]);
+
+  const isBulkBusy = publishMutation.isPending || bulkPublishMutation.isPending;
+
+  const handlePublishToggle = (postId: string, published: boolean) => {
+    publishMutation.mutate({ id: postId, published });
+  };
+
+  const handleBulkPublish = (published: boolean) => {
+    if (selectedIds.length === 0) return;
+    bulkPublishMutation.mutate(
+      { ids: selectedIds, published },
+      { onSuccess: () => setSelectedIds([]) }
+    );
+  };
 
   return (
     <BlogModuleShell
@@ -128,11 +157,59 @@ export function BlogModuleView() {
 
         {!isLoading && !isError && data && data.items.length > 0 ? (
           <>
+            {selectedIds.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 px-4 py-3">
+                <span className="text-sm font-medium">{selectedIds.length} selected</span>
+                {canPublish ? (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isBulkBusy}
+                      onClick={() => handleBulkPublish(true)}
+                    >
+                      <Eye className="mr-2 h-4 w-4" />
+                      Publish
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isBulkBusy}
+                      onClick={() => handleBulkPublish(false)}
+                    >
+                      <EyeOff className="mr-2 h-4 w-4" />
+                      Unpublish
+                    </Button>
+                  </>
+                ) : null}
+                {canDelete ? (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    disabled={isBulkBusy}
+                    onClick={() => setBulkDeleteOpen(true)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
+                ) : null}
+                <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>
+                  Clear
+                </Button>
+              </div>
+            ) : null}
+
             <BlogPostsTable
               posts={data.items}
               canWrite={canWrite}
               canDelete={canDelete}
+              canPublish={canPublish}
+              selectable={canBulkSelect}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
               onDelete={deleteDialog.openDialog}
+              onPublishToggle={(post, published) => handlePublishToggle(post.id, published)}
+              isPublishing={publishMutation.isPending}
             />
             <Pagination
               page={data.pagination.page}
@@ -147,6 +224,13 @@ export function BlogModuleView() {
         post={deleteDialog.post}
         open={deleteDialog.open}
         onOpenChange={deleteDialog.setOpen}
+      />
+
+      <BulkDeleteBlogPostsDialog
+        postIds={selectedIds}
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        onDeleted={() => setSelectedIds([])}
       />
     </BlogModuleShell>
   );

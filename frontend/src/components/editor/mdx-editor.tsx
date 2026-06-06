@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 interface MdxEditorProps {
   id?: string;
   label?: string;
-  value: string;
+  value?: string;
   onChange: (value: string) => void;
   placeholder?: string;
   error?: string;
@@ -29,8 +29,9 @@ export function MdxEditor({
   className,
   minRows = 16,
 }: MdxEditorProps) {
-  const wordCount = countWords(value);
-  const readingTime = calculateReadingTimeMinutes(value);
+  const content = value ?? '';
+  const wordCount = countWords(content);
+  const readingTime = calculateReadingTimeMinutes(content);
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -52,7 +53,7 @@ export function MdxEditor({
       </div>
       <Textarea
         id={id}
-        value={value}
+        value={content}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         rows={minRows}

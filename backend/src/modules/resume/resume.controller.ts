@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { HTTP_STATUS } from '../../constants/http-status.js';
 import { asyncHandler } from '../../utils/async-handler.js';
 import { buildPaginationMeta, sendPaginated, sendSuccess } from '../../utils/api-response.js';
+import { getValidatedQuery } from '../../utils/validated-request.js';
 import { resumeService } from './resume.service.js';
 import type {
   CreateResumeInput,
@@ -12,7 +13,7 @@ import type {
 
 export class ResumeController {
   list = asyncHandler(async (req: Request, res: Response) => {
-    const result = await resumeService.list(req.query as unknown as ResumeListQueryInput);
+    const result = await resumeService.list(getValidatedQuery<ResumeListQueryInput>(req));
     sendPaginated(res, result.items, buildPaginationMeta(result.page, result.limit, result.total));
   });
 

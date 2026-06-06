@@ -11,7 +11,16 @@ export function validate(schema: ZodType, property: RequestProperty = 'body') {
   return (req: Request, _res: Response, next: NextFunction): void => {
     try {
       const parsed = schema.parse(req[property]);
-      req[property] = parsed;
+
+      if (property === 'body') {
+        req.body = parsed;
+      } else if (property === 'query') {
+        // Express 5 query is read-only and stringifies values — keep coerced output separately.
+        req.validatedQuery = parsed;
+      } else {
+        req.validatedParams = parsed;
+      }
+
       next();
     } catch (error) {
       if (error instanceof ZodError) {

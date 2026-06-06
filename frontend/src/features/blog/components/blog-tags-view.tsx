@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 import { FormField } from '@/components/forms/form-field';
@@ -14,6 +14,13 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Table,
   TableBody,
   TableCell,
@@ -25,7 +32,15 @@ import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { Loader } from '@/components/common/loader';
 import { BlogModuleShell } from '@/features/admin/components/module-shells';
-import { useCreateTag, useDeleteTag, useUpdateTag } from '@/features/blog/hooks/use-blog-mutations';
+import { AdminBulkActionBar } from '@/features/blog/components/admin-bulk-action-bar';
+import { BulkConfirmDeleteDialog } from '@/features/blog/components/bulk-confirm-delete-dialog';
+import {
+  useBulkDeleteTags,
+  useBulkPublishPostsForTags,
+  useCreateTag,
+  useDeleteTag,
+  useUpdateTag,
+} from '@/features/blog/hooks/use-blog-mutations';
 import { useTags } from '@/features/blog/hooks/use-blog';
 import {
   tagFormDefaultValues,
@@ -37,21 +52,34 @@ import { MODULE_PERMISSIONS } from '@/constants/permissions';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/features/auth/providers/auth-provider';
 import { useZodForm } from '@/hooks/use-zod-form';
+import { cn } from '@/lib/utils';
 import { slugify } from '@/utils/string';
 
 export function BlogTagsView() {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission(MODULE_PERMISSIONS.blog.write);
   const canDelete = hasPermission(MODULE_PERMISSIONS.blog.delete);
+  const canPublish = hasPermission(MODULE_PERMISSIONS.blog.publish);
+  const canSelect = canPublish || canDelete;
 
   const { data, isLoading, isError, refetch } = useTags();
   const createMutation = useCreateTag();
   const updateMutation = useUpdateTag();
   const deleteMutation = useDeleteTag();
+  const bulkDeleteMutation = useBulkDeleteTags();
+  const bulkPublishMutation = useBulkPublishPostsForTags();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editing, setEditing] = useState<TagEntity | null>(null);
   const form = useZodForm(tagFormSchema, tagFormDefaultValues);
+
+  const tags = data ?? [];
+  const allSelected = tags.length > 0 && tags.every((t) => selectedIds.includes(t.id));
+  const someSelected = tags.some((t) => selectedIds.includes(t.id));
+  const isBusy = bulkDeleteMutation.isPending || bulkPublishMutation.isPending || deleteMutation.isPending;
 
   const openCreate = () => {
     setEditing(null);
@@ -71,6 +99,43 @@ export function BlogTagsView() {
       form.setValue('slug', slugify(name));
     }
   }, [editing, form, name]);
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(tags.map((t) => t.id));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+    );
+  };
+
+  const handlePublishPosts = (tagIds: string[], published: boolean) => {
+    bulkPublishMutation.mutate({ tagIds, published }, { onSuccess: () => setSelectedIds([]) });
+  };
+
+  const openDeleteDialog = (ids: string[]) => {
+    setDeleteTargetIds(ids);
+    setBulkDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteTargetIds.length === 0) return;
+
+    if (deleteTargetIds.length === 1) {
+      await deleteMutation.mutateAsync(deleteTargetIds[0]!);
+    } else {
+      await bulkDeleteMutation.mutateAsync(deleteTargetIds);
+    }
+
+    setBulkDeleteOpen(false);
+    setDeleteTargetIds([]);
+    setSelectedIds((current) => current.filter((id) => !deleteTargetIds.includes(id)));
+  };
 
   const handleSubmit = form.handleSubmit(async (values: TagFormValues) => {
     const payload = { name: values.name, slug: values.slug || undefined };
@@ -105,49 +170,151 @@ export function BlogTagsView() {
       {isLoading ? <Loader label="Loading tags..." /> : null}
       {isError ? <ErrorState title="Failed to load tags" onRetry={() => void refetch()} /> : null}
 
-      {!isLoading && !isError && data?.length === 0 ? (
+      {!isLoading && !isError && tags.length === 0 ? (
         <EmptyState title="No tags yet" description="Create tags to label blog posts." />
       ) : null}
 
-      {!isLoading && !isError && data && data.length > 0 ? (
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Blog posts</TableHead>
-                <TableHead>Projects</TableHead>
-                <TableHead className="w-[100px]" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((tag) => (
-                <TableRow key={tag.id}>
-                  <TableCell className="font-medium">{tag.name}</TableCell>
-                  <TableCell>
-                    <code className="text-xs">{tag.slug}</code>
-                  </TableCell>
-                  <TableCell>{tag.blogPostCount}</TableCell>
-                  <TableCell>{tag.projectCount}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      {canWrite ? (
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(tag)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      ) : null}
-                      {canDelete ? (
-                        <Button variant="ghost" size="icon" onClick={() => void deleteMutation.mutateAsync(tag.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      ) : null}
-                    </div>
-                  </TableCell>
+      {!isLoading && !isError && tags.length > 0 ? (
+        <div className="space-y-4">
+          <AdminBulkActionBar selectedCount={selectedIds.length} onClear={() => setSelectedIds([])}>
+            {canPublish ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isBusy}
+                  onClick={() => handlePublishPosts(selectedIds, true)}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  Publish posts
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isBusy}
+                  onClick={() => handlePublishPosts(selectedIds, false)}
+                >
+                  <EyeOff className="mr-2 h-4 w-4" />
+                  Unpublish posts
+                </Button>
+              </>
+            ) : null}
+            {canDelete ? (
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={isBusy}
+                onClick={() => openDeleteDialog(selectedIds)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            ) : null}
+          </AdminBulkActionBar>
+
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {canSelect ? (
+                    <TableHead className="w-10">
+                      <input
+                        type="checkbox"
+                        role="checkbox"
+                        aria-label="Select all tags"
+                        checked={allSelected}
+                        ref={(input) => {
+                          if (input) input.indeterminate = someSelected && !allSelected;
+                        }}
+                        onChange={toggleAll}
+                        className="h-4 w-4 rounded border-input accent-accent"
+                      />
+                    </TableHead>
+                  ) : null}
+                  <TableHead>Name</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead>Blog posts</TableHead>
+                  <TableHead>Projects</TableHead>
+                  <TableHead className="w-[70px]" />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {tags.map((tag) => {
+                  const isSelected = selectedIds.includes(tag.id);
+
+                  return (
+                    <TableRow key={tag.id} className={cn(isSelected && 'bg-muted/30')}>
+                      {canSelect ? (
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            role="checkbox"
+                            aria-label={`Select ${tag.name}`}
+                            checked={isSelected}
+                            onChange={() => toggleOne(tag.id)}
+                            className="h-4 w-4 rounded border-input accent-accent"
+                          />
+                        </TableCell>
+                      ) : null}
+                      <TableCell className="font-medium">{tag.name}</TableCell>
+                      <TableCell>
+                        <code className="text-xs">{tag.slug}</code>
+                      </TableCell>
+                      <TableCell>{tag.blogPostCount}</TableCell>
+                      <TableCell>{tag.projectCount}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" aria-label={`Actions for ${tag.name}`}>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {canWrite ? (
+                              <DropdownMenuItem onClick={() => openEdit(tag)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                            ) : null}
+                            {canPublish ? (
+                              <>
+                                <DropdownMenuItem
+                                  disabled={isBusy}
+                                  onClick={() => handlePublishPosts([tag.id], true)}
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Publish posts
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  disabled={isBusy}
+                                  onClick={() => handlePublishPosts([tag.id], false)}
+                                >
+                                  <EyeOff className="mr-2 h-4 w-4" />
+                                  Unpublish posts
+                                </DropdownMenuItem>
+                              </>
+                            ) : null}
+                            {canDelete ? (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => openDeleteDialog([tag.id])}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </>
+                            ) : null}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       ) : null}
 
@@ -172,6 +339,15 @@ export function BlogTagsView() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <BulkConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        count={deleteTargetIds.length}
+        entityLabel={deleteTargetIds.length === 1 ? 'tag' : 'tags'}
+        isPending={bulkDeleteMutation.isPending || deleteMutation.isPending}
+        onConfirm={handleConfirmDelete}
+      />
     </BlogModuleShell>
   );
 }

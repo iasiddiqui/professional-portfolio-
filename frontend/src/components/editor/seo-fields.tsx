@@ -3,7 +3,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { ImagePlus, Loader2, Trash2, Upload } from 'lucide-react';
 import Image from 'next/image';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { getErrorMessage } from '@/lib/errors';
+import { resolveMediaUrl } from '@/lib/media-url';
 
 interface SeoFieldsProps<T extends FieldValues> {
   control: Control<T>;
@@ -98,9 +99,21 @@ interface FeaturedImageUploadProps {
 
 function FeaturedImageUpload({ previewUrl, onUpload, onClear }: FeaturedImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (previewUrl) {
+      setLocalPreviewUrl(null);
+    }
+  }, [previewUrl]);
+
+  const displayUrl = resolveMediaUrl(previewUrl ?? localPreviewUrl);
 
   const uploadMutation = useMutation({
     mutationFn: onUpload,
+    onSuccess: (url) => {
+      setLocalPreviewUrl(url);
+    },
     onError: (error) => toast.error(getErrorMessage(error, 'Upload failed')),
   });
 
@@ -113,13 +126,21 @@ function FeaturedImageUpload({ previewUrl, onUpload, onClear }: FeaturedImageUpl
   return (
     <div className="space-y-3">
       <Label>Featured image</Label>
-      {previewUrl ? (
+      {displayUrl ? (
         <div className="overflow-hidden rounded-lg border">
           <div className="relative aspect-video max-w-md">
-            <Image src={previewUrl} alt="Featured" fill className="object-cover" unoptimized />
+            <Image src={displayUrl} alt="Featured" fill className="object-cover" sizes="448px" />
           </div>
           <div className="flex justify-end border-t p-3">
-            <Button type="button" variant="outline" size="sm" onClick={onClear}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setLocalPreviewUrl(null);
+                onClear();
+              }}
+            >
               <Trash2 className="mr-2 h-4 w-4" />
               Remove
             </Button>
@@ -141,7 +162,7 @@ function FeaturedImageUpload({ previewUrl, onUpload, onClear }: FeaturedImageUpl
         </button>
       )}
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-      {!previewUrl ? (
+      {!displayUrl ? (
         <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={uploadMutation.isPending}>
           <Upload className="mr-2 h-4 w-4" />
           Choose file

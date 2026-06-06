@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Eye, EyeOff, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 
 import { FormField } from '@/components/forms/form-field';
 import {
@@ -11,6 +13,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -23,7 +32,11 @@ import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { Loader } from '@/components/common/loader';
 import { BlogModuleShell } from '@/features/admin/components/module-shells';
+import { AdminBulkActionBar } from '@/features/blog/components/admin-bulk-action-bar';
+import { BulkConfirmDeleteDialog } from '@/features/blog/components/bulk-confirm-delete-dialog';
 import {
+  useBulkDeleteBlogCategories,
+  useBulkPublishPostsForCategories,
   useCreateBlogCategory,
   useDeleteBlogCategory,
   useUpdateBlogCategory,
@@ -39,23 +52,34 @@ import { MODULE_PERMISSIONS } from '@/constants/permissions';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/features/auth/providers/auth-provider';
 import { useZodForm } from '@/hooks/use-zod-form';
+import { cn } from '@/lib/utils';
 import { slugify } from '@/utils/string';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
-import Link from 'next/link';
 
 export function BlogCategoriesView() {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission(MODULE_PERMISSIONS.blog.write);
   const canDelete = hasPermission(MODULE_PERMISSIONS.blog.delete);
+  const canPublish = hasPermission(MODULE_PERMISSIONS.blog.publish);
+  const canSelect = canPublish || canDelete;
 
   const { data, isLoading, isError, refetch } = useBlogCategories();
   const createMutation = useCreateBlogCategory();
   const updateMutation = useUpdateBlogCategory();
   const deleteMutation = useDeleteBlogCategory();
+  const bulkDeleteMutation = useBulkDeleteBlogCategories();
+  const bulkPublishMutation = useBulkPublishPostsForCategories();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editing, setEditing] = useState<BlogCategory | null>(null);
   const form = useZodForm(blogCategoryFormSchema, blogCategoryFormDefaultValues);
+
+  const categories = data ?? [];
+  const allSelected = categories.length > 0 && categories.every((c) => selectedIds.includes(c.id));
+  const someSelected = categories.some((c) => selectedIds.includes(c.id));
+  const isBusy = bulkDeleteMutation.isPending || bulkPublishMutation.isPending || deleteMutation.isPending;
 
   const openCreate = () => {
     setEditing(null);
@@ -79,6 +103,46 @@ export function BlogCategoriesView() {
       form.setValue('slug', slugify(name));
     }
   }, [editing, form, name]);
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(categories.map((c) => c.id));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+    );
+  };
+
+  const handlePublishPosts = (categoryIds: string[], published: boolean) => {
+    bulkPublishMutation.mutate(
+      { categoryIds, published },
+      { onSuccess: () => setSelectedIds([]) }
+    );
+  };
+
+  const openDeleteDialog = (ids: string[]) => {
+    setDeleteTargetIds(ids);
+    setBulkDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteTargetIds.length === 0) return;
+
+    if (deleteTargetIds.length === 1) {
+      await deleteMutation.mutateAsync(deleteTargetIds[0]!);
+    } else {
+      await bulkDeleteMutation.mutateAsync(deleteTargetIds);
+    }
+
+    setBulkDeleteOpen(false);
+    setDeleteTargetIds([]);
+    setSelectedIds((current) => current.filter((id) => !deleteTargetIds.includes(id)));
+  };
 
   const handleSubmit = form.handleSubmit(async (values: BlogCategoryFormValues) => {
     const payload = {
@@ -117,51 +181,149 @@ export function BlogCategoriesView() {
       {isLoading ? <Loader label="Loading categories..." /> : null}
       {isError ? <ErrorState title="Failed to load categories" onRetry={() => void refetch()} /> : null}
 
-      {!isLoading && !isError && data?.length === 0 ? (
+      {!isLoading && !isError && categories.length === 0 ? (
         <EmptyState title="No categories yet" description="Create a category to organize blog posts." />
       ) : null}
 
-      {!isLoading && !isError && data && data.length > 0 ? (
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Posts</TableHead>
-                <TableHead className="w-[100px]" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-medium">{category.name}</TableCell>
-                  <TableCell>
-                    <code className="text-xs">{category.slug}</code>
-                  </TableCell>
-                  <TableCell>{category.postCount}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      {canWrite ? (
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(category)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      ) : null}
-                      {canDelete ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => void deleteMutation.mutateAsync(category.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      ) : null}
-                    </div>
-                  </TableCell>
+      {!isLoading && !isError && categories.length > 0 ? (
+        <div className="space-y-4">
+          <AdminBulkActionBar selectedCount={selectedIds.length} onClear={() => setSelectedIds([])}>
+            {canPublish ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isBusy}
+                  onClick={() => handlePublishPosts(selectedIds, true)}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  Publish posts
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isBusy}
+                  onClick={() => handlePublishPosts(selectedIds, false)}
+                >
+                  <EyeOff className="mr-2 h-4 w-4" />
+                  Unpublish posts
+                </Button>
+              </>
+            ) : null}
+            {canDelete ? (
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={isBusy}
+                onClick={() => openDeleteDialog(selectedIds)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            ) : null}
+          </AdminBulkActionBar>
+
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {canSelect ? (
+                    <TableHead className="w-10">
+                      <input
+                        type="checkbox"
+                        role="checkbox"
+                        aria-label="Select all categories"
+                        checked={allSelected}
+                        ref={(input) => {
+                          if (input) input.indeterminate = someSelected && !allSelected;
+                        }}
+                        onChange={toggleAll}
+                        className="h-4 w-4 rounded border-input accent-accent"
+                      />
+                    </TableHead>
+                  ) : null}
+                  <TableHead>Name</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead>Posts</TableHead>
+                  <TableHead className="w-[70px]" />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {categories.map((category) => {
+                  const isSelected = selectedIds.includes(category.id);
+
+                  return (
+                    <TableRow key={category.id} className={cn(isSelected && 'bg-muted/30')}>
+                      {canSelect ? (
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            role="checkbox"
+                            aria-label={`Select ${category.name}`}
+                            checked={isSelected}
+                            onChange={() => toggleOne(category.id)}
+                            className="h-4 w-4 rounded border-input accent-accent"
+                          />
+                        </TableCell>
+                      ) : null}
+                      <TableCell className="font-medium">{category.name}</TableCell>
+                      <TableCell>
+                        <code className="text-xs">{category.slug}</code>
+                      </TableCell>
+                      <TableCell>{category.postCount}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" aria-label={`Actions for ${category.name}`}>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {canWrite ? (
+                              <DropdownMenuItem onClick={() => openEdit(category)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                            ) : null}
+                            {canPublish ? (
+                              <>
+                                <DropdownMenuItem
+                                  disabled={isBusy}
+                                  onClick={() => handlePublishPosts([category.id], true)}
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Publish posts
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  disabled={isBusy}
+                                  onClick={() => handlePublishPosts([category.id], false)}
+                                >
+                                  <EyeOff className="mr-2 h-4 w-4" />
+                                  Unpublish posts
+                                </DropdownMenuItem>
+                              </>
+                            ) : null}
+                            {canDelete ? (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => openDeleteDialog([category.id])}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </>
+                            ) : null}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       ) : null}
 
@@ -187,6 +349,15 @@ export function BlogCategoriesView() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <BulkConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        count={deleteTargetIds.length}
+        entityLabel={deleteTargetIds.length === 1 ? 'category' : 'categories'}
+        isPending={bulkDeleteMutation.isPending || deleteMutation.isPending}
+        onConfirm={handleConfirmDelete}
+      />
     </BlogModuleShell>
   );
 }

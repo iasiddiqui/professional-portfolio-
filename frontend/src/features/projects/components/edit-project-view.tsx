@@ -10,6 +10,7 @@ import { ProjectForm } from '@/features/projects/components/project-form';
 import { useUpdateProject } from '@/features/projects/hooks/use-project-mutations';
 import { useProject } from '@/features/projects/hooks/use-projects';
 import {
+  projectFormDefaultValues,
   projectFormSchema,
   toProjectFormValues,
   toProjectPayload,
@@ -26,7 +27,7 @@ export function EditProjectView({ projectId }: EditProjectViewProps) {
   const router = useRouter();
   const { data: project, isLoading, isError, refetch } = useProject(projectId);
   const updateMutation = useUpdateProject(projectId);
-  const form = useZodForm(projectFormSchema);
+  const form = useZodForm(projectFormSchema, projectFormDefaultValues);
 
   useEffect(() => {
     if (project) {

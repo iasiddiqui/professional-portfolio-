@@ -4,6 +4,7 @@ import { PERMISSIONS } from '../../constants/permissions.js';
 import { HTTP_STATUS } from '../../constants/http-status.js';
 import { asyncHandler } from '../../utils/async-handler.js';
 import { buildPaginationMeta, sendPaginated, sendSuccess } from '../../utils/api-response.js';
+import { getValidatedQuery } from '../../utils/validated-request.js';
 import { projectsService } from './projects.service.js';
 import type {
   CreateProjectInput,
@@ -14,7 +15,7 @@ import type {
 
 export class ProjectsController {
   list = asyncHandler(async (req: Request, res: Response) => {
-    const result = await projectsService.list(req.query as unknown as ProjectListQueryInput);
+    const result = await projectsService.list(getValidatedQuery<ProjectListQueryInput>(req));
 
     sendPaginated(res, result.items, buildPaginationMeta(result.page, result.limit, result.total));
   });

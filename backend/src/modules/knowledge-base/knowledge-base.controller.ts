@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { HTTP_STATUS } from '../../constants/http-status.js';
 import { asyncHandler } from '../../utils/async-handler.js';
 import { buildPaginationMeta, sendPaginated, sendSuccess } from '../../utils/api-response.js';
+import { getValidatedQuery } from '../../utils/validated-request.js';
 import { knowledgeBaseService } from './knowledge-base.service.js';
 import type {
   CreateKnowledgeBaseInput,
@@ -12,7 +13,7 @@ import type {
 
 export class KnowledgeBaseController {
   list = asyncHandler(async (req: Request, res: Response) => {
-    const result = await knowledgeBaseService.list(req.query as unknown as KnowledgeBaseListQueryInput);
+    const result = await knowledgeBaseService.list(getValidatedQuery<KnowledgeBaseListQueryInput>(req));
     sendPaginated(res, result.items, buildPaginationMeta(result.page, result.limit, result.total));
   });
 

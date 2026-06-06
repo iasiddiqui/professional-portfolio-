@@ -14,12 +14,26 @@ async function bootstrap(): Promise<void> {
 
   const app = createApp();
 
-  const server = app.listen(env.PORT, () => {
+  const server = app.listen(env.PORT);
+
+  server.on('listening', () => {
     logger.info('Server started', {
       port: env.PORT,
       apiPrefix: env.API_PREFIX,
       environment: env.NODE_ENV,
     });
+  });
+
+  server.on('error', (error: NodeJS.ErrnoException) => {
+    if (error.code === 'EADDRINUSE') {
+      logger.error(`Port ${env.PORT} is already in use. Stop the other process or change PORT in backend/.env`, {
+        port: env.PORT,
+      });
+      process.exit(1);
+    }
+
+    logger.error('Server failed to start', { message: error.message });
+    process.exit(1);
   });
 
   void cleanupExpiredAuthRecords();

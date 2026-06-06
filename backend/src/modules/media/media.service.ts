@@ -56,4 +56,8 @@ export class MediaService {
 
 export const mediaService = new MediaService();
 
-export const mediaWritePermissions = [PERMISSIONS.MEDIA_WRITE, PERMISSIONS.PROJECTS_WRITE] as const;
+export const mediaWritePermissions = [
+  PERMISSIONS.MEDIA_WRITE,
+  PERMISSIONS.PROJECTS_WRITE,
+  PERMISSIONS.BLOG_WRITE,
+] as const;

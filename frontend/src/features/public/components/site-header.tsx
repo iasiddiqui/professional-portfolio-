@@ -47,6 +47,9 @@ export function SiteHeader({ siteName = 'Portfolio' }: SiteHeaderProps) {
           <Button asChild size="sm" className="hidden md:inline-flex">
             <Link href={ROUTES.contact}>Get in touch</Link>
           </Button>
+          <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
+            <Link href={ROUTES.login}>Login</Link>
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -84,6 +87,11 @@ export function SiteHeader({ siteName = 'Portfolio' }: SiteHeaderProps) {
             <Button asChild className="mt-2">
               <Link href={ROUTES.contact} onClick={() => setOpen(false)}>
                 Get in touch
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="mt-2">
+              <Link href={ROUTES.login} onClick={() => setOpen(false)}>
+                Login
               </Link>
             </Button>
           </nav>

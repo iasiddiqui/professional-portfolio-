@@ -4,6 +4,7 @@ import { AiFeatureType } from '@prisma/client';
 import { PERMISSIONS } from '../../constants/permissions.js';
 import { asyncHandler } from '../../utils/async-handler.js';
 import { buildPaginationMeta, sendPaginated, sendSuccess } from '../../utils/api-response.js';
+import { getValidatedQuery } from '../../utils/validated-request.js';
 import { mapAiInteractionToDto } from './ai.dto.js';
 import { aiService } from './ai.service.js';
 import type { AiListQueryInput, AskIshanInput } from './ai.validator.js';
@@ -16,7 +17,7 @@ export class AiController {
   });
 
   listInteractions = asyncHandler(async (req: Request, res: Response) => {
-    const query = req.query as unknown as AiListQueryInput;
+    const query = getValidatedQuery<AiListQueryInput>(req);
     const page = query.page;
     const limit = query.limit;
     const skip = (page - 1) * limit;

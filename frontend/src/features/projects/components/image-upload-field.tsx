@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { mediaService } from '@/features/projects/services/media.service';
 import type { ProjectMedia } from '@/features/projects/types/project.types';
 import { getErrorMessage } from '@/lib/errors';
+import { resolveMediaUrl } from '@/lib/media-url';
 import { cn } from '@/lib/utils';
 
 interface ImageUploadFieldProps {
@@ -63,7 +64,13 @@ export function ImageUploadField({
       {value ? (
         <div className="relative overflow-hidden rounded-lg border bg-muted/30">
           <div className="relative aspect-video w-full max-w-sm">
-            <Image src={value.url} alt={value.alt ?? label} fill className="object-cover" unoptimized />
+            <Image
+              src={resolveMediaUrl(value.url)!}
+              alt={value.alt ?? label}
+              fill
+              className="object-cover"
+              sizes="384px"
+            />
           </div>
           <div className="flex items-center justify-between gap-2 border-t p-3">
             <p className="truncate text-sm text-muted-foreground">{value.filename}</p>
@@ -157,7 +164,13 @@ export function GalleryUploadField({
           {items.map((item) => (
             <div key={item.id} className="overflow-hidden rounded-lg border">
               <div className="relative aspect-video">
-                <Image src={item.url} alt={item.alt ?? 'Gallery image'} fill className="object-cover" unoptimized />
+                <Image
+                  src={resolveMediaUrl(item.url)!}
+                  alt={item.alt ?? 'Gallery image'}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                />
               </div>
               <div className="flex items-center justify-between gap-2 p-3">
                 <p className="truncate text-xs text-muted-foreground">{item.filename}</p>

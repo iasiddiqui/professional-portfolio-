@@ -40,9 +40,30 @@ export const githubRateLimiter = rateLimit({
   statusCode: HTTP_STATUS.TOO_MANY_REQUESTS,
 });
 
+/** @deprecated Use authCredentialRateLimiter — kept for backwards compatibility. */
 export const authRateLimiter = rateLimit({
   windowMs: env.AUTH_RATE_LIMIT_WINDOW_MS,
   max: env.AUTH_RATE_LIMIT_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: formatErrorResponse('Too many authentication attempts, please try again later'),
+  statusCode: HTTP_STATUS.TOO_MANY_REQUESTS,
+});
+
+/** Login / register: default 6 attempts per minute (~1 every 10 seconds). */
+export const authCredentialRateLimiter = rateLimit({
+  windowMs: env.AUTH_RATE_LIMIT_WINDOW_MS,
+  max: env.AUTH_RATE_LIMIT_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: formatErrorResponse('Too many authentication attempts, please try again later'),
+  statusCode: HTTP_STATUS.TOO_MANY_REQUESTS,
+});
+
+/** Token refresh — separate higher ceiling so session recovery is not blocked. */
+export const authRefreshRateLimiter = rateLimit({
+  windowMs: env.AUTH_RATE_LIMIT_WINDOW_MS,
+  max: env.AUTH_REFRESH_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
   message: formatErrorResponse('Too many authentication attempts, please try again later'),

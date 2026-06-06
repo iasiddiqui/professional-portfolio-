@@ -28,3 +28,12 @@ export function isUnauthorizedError(error: unknown): boolean {
     (error as { status?: number }).status === 401
   );
 }
+
+export function isRateLimitError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'status' in error &&
+    (error as { status?: number }).status === 429
+  );
+}
