@@ -16,11 +16,7 @@ export const mediaService = {
     const query = params.toString();
     const url = query ? `${API_ENDPOINTS.media.upload}?${query}` : API_ENDPOINTS.media.upload;
 
-    return apiRequest<ProjectMedia>(() =>
-      api.post<ApiResponse<ProjectMedia>>(url, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-    );
+    return apiRequest<ProjectMedia>(() => api.post<ApiResponse<ProjectMedia>>(url, formData));
   },
 
   delete(id: string) {

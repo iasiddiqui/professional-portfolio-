@@ -6,11 +6,12 @@ import { QUERY_KEYS, QUERY_STALE_TIME } from '@/constants/query-keys';
 import { projectService } from '@/features/projects/services/project.service';
 import type { ProjectListParams } from '@/features/projects/types/project.types';
 
-export function useProjects(params?: ProjectListParams) {
+export function useProjects(params?: ProjectListParams, enabled = true) {
   return useQuery({
     queryKey: QUERY_KEYS.projects.list(params),
     queryFn: () => projectService.list(params),
     staleTime: QUERY_STALE_TIME.default,
+    enabled,
   });
 }
 

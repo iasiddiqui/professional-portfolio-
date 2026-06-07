@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Eye, EyeOff, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -51,9 +51,9 @@ import type { BlogCategory } from '@/features/blog/types/blog.types';
 import { MODULE_PERMISSIONS } from '@/constants/permissions';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/features/auth/providers/auth-provider';
+import { useAutoSlugSync } from '@/hooks/use-auto-slug-sync';
 import { useZodForm } from '@/hooks/use-zod-form';
 import { cn } from '@/lib/utils';
-import { slugify } from '@/utils/string';
 
 export function BlogCategoriesView() {
   const { hasPermission } = useAuth();
@@ -98,11 +98,11 @@ export function BlogCategoriesView() {
   };
 
   const name = form.watch('name');
-  useEffect(() => {
-    if (!editing && name && !form.getValues('slug')) {
-      form.setValue('slug', slugify(name));
-    }
-  }, [editing, form, name]);
+  const { markSlugManual } = useAutoSlugSync(form, {
+    title: name,
+    slugField: 'slug',
+    enabled: !editing,
+  });
 
   const toggleAll = () => {
     if (allSelected) {
@@ -341,7 +341,7 @@ export function BlogCategoriesView() {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <FormField control={form.control} name="name" label="Name" />
-            <FormField control={form.control} name="slug" label="Slug" />
+            <FormField control={form.control} name="slug" label="Slug" onValueChange={markSlugManual} />
             <FormField control={form.control} name="description" label="Description" as="textarea" />
             <Button type="submit" variant="accent" disabled={createMutation.isPending || updateMutation.isPending}>
               {editing ? 'Save changes' : 'Create category'}

@@ -37,7 +37,7 @@ export function EditProjectView({ projectId }: EditProjectViewProps) {
 
   const handleSubmit = async (values: ProjectFormValues) => {
     await updateMutation.mutateAsync(toProjectPayload(values));
-    router.push(ROUTES.admin.project(projectId));
+    router.push(ROUTES.admin.projects);
   };
 
   if (isLoading) {
@@ -74,6 +74,7 @@ export function EditProjectView({ projectId }: EditProjectViewProps) {
         isSubmitting={updateMutation.isPending}
         initialThumbnail={project.thumbnail}
         initialGallery={project.gallery}
+        syncSlugFromTitle={false}
       />
     </ProjectModuleShell>
   );

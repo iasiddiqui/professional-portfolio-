@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Controller, useWatch } from 'react-hook-form';
+import { Clock } from 'lucide-react';
 
 import { FormCheckboxField } from '@/components/forms/form-checkbox-field';
 import { FormField } from '@/components/forms/form-field';
@@ -12,9 +14,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { ResumeUploadField } from '@/features/resume/components/resume-upload-field';
 import { useCreateResume, useUpdateResume } from '@/features/resume/hooks/use-resume-mutations';
 import {
-  resumeFormDefaultValues,
+  createResumeFormDefaultValues,
+  generateResumeVersion,
   resumeFormSchema,
   toResumeFormValues,
   toResumePayload,
@@ -32,17 +36,30 @@ interface ResumeFormDialogProps {
 export function ResumeFormDialog({ open, onOpenChange, resume }: ResumeFormDialogProps) {
   const createMutation = useCreateResume();
   const updateMutation = useUpdateResume();
-  const form = useZodForm(resumeFormSchema, resumeFormDefaultValues);
+  const form = useZodForm(resumeFormSchema, createResumeFormDefaultValues());
   const isEditing = Boolean(resume);
+  const version = useWatch({ control: form.control, name: 'version' });
 
   useEffect(() => {
-    if (open) {
-      form.reset(resume ? toResumeFormValues(resume) : resumeFormDefaultValues);
+    if (!open) return;
+
+    if (resume) {
+      form.reset(toResumeFormValues(resume));
+      return;
     }
+
+    form.reset(createResumeFormDefaultValues());
   }, [form, open, resume]);
 
+  const bumpVersion = () => {
+    form.setValue('version', generateResumeVersion(), { shouldDirty: true });
+  };
+
   const handleSubmit = form.handleSubmit(async (values: ResumeFormValues) => {
-    const payload = toResumePayload(values);
+    const payload = toResumePayload({
+      ...values,
+      version: isEditing ? values.version : generateResumeVersion(),
+    });
 
     if (isEditing && resume) {
       await updateMutation.mutateAsync({ id: resume.id, payload });
@@ -57,29 +74,65 @@ export function ResumeFormDialog({ open, onOpenChange, resume }: ResumeFormDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-xl">
+        <DialogHeader className="border-b px-6 py-5">
           <DialogTitle>{isEditing ? 'Edit resume' : 'New resume'}</DialogTitle>
-          <DialogDescription>Upload a resume version for public download.</DialogDescription>
+          <DialogDescription>
+            Upload a resume file or link an external URL. Version is set automatically from the
+            upload time.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField control={form.control} name="title" label="Title" placeholder="Software Engineer Resume" />
+
+        <form id="resume-form" onSubmit={handleSubmit} className="space-y-5 px-6 py-5">
           <FormField
             control={form.control}
-            name="fileUrl"
-            label="File URL"
-            placeholder="https://example.com/resume.pdf"
+            name="title"
+            label="Title"
+            placeholder="Software Engineer Resume"
           />
-          <FormField control={form.control} name="version" label="Version" placeholder="2025.06" />
+
+          <Controller
+            control={form.control}
+            name="fileUrl"
+            render={({ field, fieldState }) => (
+              <ResumeUploadField
+                key={resume?.id ?? 'new'}
+                value={field.value}
+                onChange={field.onChange}
+                onUploadSuccess={bumpVersion}
+                initialUseExternalUrl={Boolean(
+                  resume?.fileUrl && !resume.fileUrl.includes('/uploads/')
+                )}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+
+          <input type="hidden" {...form.register('version')} />
+
+          <div className="flex items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2.5 text-sm">
+            <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Version</p>
+              <p className="truncate font-medium">{version || generateResumeVersion()}</p>
+            </div>
+          </div>
+
           <FormCheckboxField
             control={form.control}
             name="isActive"
             label="Set as active"
-            description="Only one resume can be active at a time. Use activate action to switch versions."
+            description="Only one resume can be active. Visitors download the active version from your site."
           />
-          <Button type="submit" variant="accent" disabled={isPending}>
-            {isPending ? 'Saving...' : isEditing ? 'Save changes' : 'Create resume'}
-          </Button>
+
+          <div className="-mx-6 -mb-5 flex justify-end gap-2 border-t bg-muted/20 px-6 py-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="accent" disabled={isPending}>
+              {isPending ? 'Saving...' : isEditing ? 'Save changes' : 'Create resume'}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

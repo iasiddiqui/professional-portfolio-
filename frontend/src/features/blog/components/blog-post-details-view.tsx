@@ -22,6 +22,7 @@ import { MODULE_PERMISSIONS } from '@/constants/permissions';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/features/auth/providers/auth-provider';
 import { formatDateTime } from '@/utils/date';
+import { ContentRenderer } from '@/features/public/components/content-renderer';
 import { resolveMediaUrl } from '@/lib/media-url';
 
 interface BlogPostDetailsViewProps {
@@ -115,9 +116,11 @@ export function BlogPostDetailsView({ postId }: BlogPostDetailsViewProps) {
               <CardTitle>Content preview</CardTitle>
             </CardHeader>
             <CardContent>
-              <pre className="max-h-[480px] overflow-auto whitespace-pre-wrap rounded-lg bg-muted/40 p-4 font-mono text-sm leading-relaxed">
-                {post.content}
-              </pre>
+              <ContentRenderer
+                content={post.content}
+                contentFormat={post.contentFormat}
+                className="max-h-[480px] overflow-auto rounded-lg bg-muted/40 p-4"
+              />
             </CardContent>
           </Card>
         </div>

@@ -1,5 +1,13 @@
 import type { ApiErrorResponse } from '@/types/api.types';
 
+function formatValidationErrors(errors?: ApiErrorResponse['errors']): string | null {
+  if (!errors?.length) return null;
+
+  return errors
+    .map((issue) => (issue.field ? `${issue.field}: ${issue.message}` : issue.message))
+    .join('. ');
+}
+
 export function createApiError(
   message: string,
   status?: number,
@@ -15,6 +23,13 @@ export function createApiError(
 }
 
 export function getErrorMessage(error: unknown, fallback = 'Something went wrong'): string {
+  if (typeof error === 'object' && error !== null) {
+    const validationMessage = formatValidationErrors(
+      (error as { errors?: ApiErrorResponse['errors'] }).errors
+    );
+    if (validationMessage) return validationMessage;
+  }
+
   if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
   return fallback;

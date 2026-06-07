@@ -30,7 +30,7 @@ export class ResumeRepository {
     const [items, total] = await prisma.$transaction([
       prisma.resume.findMany({
         where,
-        orderBy: [{ isActive: 'desc' }, { updatedAt: 'desc' }],
+        orderBy: { createdAt: 'desc' },
         skip: filters.skip,
         take: filters.limit,
       }),
@@ -42,6 +42,10 @@ export class ResumeRepository {
 
   async findById(id: string): Promise<ResumeRecord | null> {
     return prisma.resume.findUnique({ where: { id } });
+  }
+
+  async findActive(): Promise<ResumeRecord | null> {
+    return prisma.resume.findFirst({ where: { isActive: true } });
   }
 
   async create(data: Prisma.ResumeCreateInput): Promise<ResumeRecord> {

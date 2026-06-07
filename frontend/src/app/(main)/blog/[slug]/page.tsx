@@ -110,7 +110,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       <section className="container mx-auto max-w-3xl px-4 pb-16">
         <div className="glass-panel rounded-2xl p-6 sm:p-10">
-          <ContentRenderer content={post.content} className="text-base text-muted-foreground" />
+          <ContentRenderer
+            content={post.content}
+            contentFormat={post.contentFormat}
+            className="text-base text-muted-foreground"
+          />
         </div>
       </section>
 

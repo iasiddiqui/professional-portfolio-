@@ -50,6 +50,28 @@ export function useActivateResume() {
   });
 }
 
+export function useSetResumeActive() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      isActive ? resumeService.activate(id) : resumeService.update(id, { isActive: false }),
+    onSuccess: (resume, { isActive }) => {
+      queryClient.setQueryData(QUERY_KEYS.resume.detail(resume.id), resume);
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.resume.all });
+      toast.success(
+        isActive
+          ? 'Resume set as active. Any previously active resume is now inactive.'
+          : 'Resume set as inactive'
+      );
+    },
+    onError: (error, { isActive }) =>
+      toast.error(
+        getErrorMessage(error, isActive ? 'Failed to activate resume' : 'Failed to deactivate resume')
+      ),
+  });
+}
+
 export function useDeleteResume() {
   const queryClient = useQueryClient();
 

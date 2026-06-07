@@ -70,9 +70,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     let mounted = true;
 
+    if (useAuthStore.getState().user) {
+      setInitialized(true);
+    }
+
     const init = async () => {
       await refreshSession();
-
       if (mounted) {
         setInitialized(true);
       }

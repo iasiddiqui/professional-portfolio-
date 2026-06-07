@@ -39,7 +39,7 @@ export class ResumeService {
       title: input.title,
       fileUrl: input.fileUrl,
       version: input.version,
-      isActive: input.isActive,
+      isActive: false,
     });
 
     if (input.isActive) {
@@ -56,14 +56,16 @@ export class ResumeService {
     const existing = await resumeRepository.findById(id);
     if (!existing) throw new AppError('Resume not found', HTTP_STATUS.NOT_FOUND);
 
+    const { isActive, ...fields } = input;
+
     const resume = await resumeRepository.update(id, {
-      ...(input.title !== undefined ? { title: input.title } : {}),
-      ...(input.fileUrl !== undefined ? { fileUrl: input.fileUrl } : {}),
-      ...(input.version !== undefined ? { version: input.version } : {}),
-      ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
+      ...(fields.title !== undefined ? { title: fields.title } : {}),
+      ...(fields.fileUrl !== undefined ? { fileUrl: fields.fileUrl } : {}),
+      ...(fields.version !== undefined ? { version: fields.version } : {}),
+      ...(isActive === false ? { isActive: false } : {}),
     });
 
-    if (input.isActive === true) {
+    if (isActive === true) {
       const activated = await resumeRepository.activate(id);
       return mapResumeToDto(activated);
     }

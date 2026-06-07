@@ -2,6 +2,7 @@ import { ContentFormat } from '@prisma/client';
 import { z } from 'zod';
 
 import { paginationQuerySchema } from '../../validators/pagination.validator.js';
+import { optionalMediaUrlSchema } from '../../validators/media-url.validator.js';
 
 const slugSchema = z
   .string()
@@ -9,17 +10,32 @@ const slugSchema = z
   .max(120)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase alphanumeric with hyphens');
 
+const optionalNullableTextSchema = (max: number) =>
+  z
+    .union([z.string().trim().max(max), z.literal(''), z.null()])
+    .optional()
+    .transform((value) => (value === '' || value === undefined ? null : (value ?? null)));
+
 const blogFieldsSchema = z.object({
   title: z.string().trim().min(1).max(200),
-  slug: slugSchema.optional(),
+  slug: z
+    .union([slugSchema, z.literal('')])
+    .optional()
+    .transform((value) => (value === '' ? undefined : value)),
   excerpt: z.string().trim().min(1).max(500),
-  content: z.string().trim().min(1),
+  content: z.string().trim().min(1, 'Content is required'),
   contentFormat: z.nativeEnum(ContentFormat).default(ContentFormat.MDX),
-  featuredImage: z.string().url().nullable().optional(),
+  featuredImage: optionalMediaUrlSchema,
   published: z.boolean().default(false),
-  seoTitle: z.string().trim().max(70).nullable().optional(),
-  seoDescription: z.string().trim().max(160).nullable().optional(),
-  categoryId: z.string().cuid().nullable().optional(),
+  seoTitle: optionalNullableTextSchema(70),
+  seoDescription: optionalNullableTextSchema(160),
+  categoryId: z
+    .union([z.string().cuid(), z.literal('__none__'), z.literal(''), z.null()])
+    .optional()
+    .transform((value) => {
+      if (value === '__none__' || value === '' || value === undefined) return null;
+      return value;
+    }),
   tagIds: z.array(z.string().cuid()).optional().default([]),
 });
 

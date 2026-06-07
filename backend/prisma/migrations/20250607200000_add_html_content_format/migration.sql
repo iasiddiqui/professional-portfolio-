@@ -1,0 +1,1 @@
+ALTER TYPE "ContentFormat" ADD VALUE IF NOT EXISTS 'HTML';

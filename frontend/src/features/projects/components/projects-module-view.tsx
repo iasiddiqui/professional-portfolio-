@@ -1,8 +1,8 @@
 'use client';
 
-import { Plus, Search } from 'lucide-react';
+import { Eye, EyeOff, Plus, Search, Star, StarOff, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
@@ -18,27 +18,42 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ProjectModuleShell } from '@/features/admin/components/module-shells';
+import { BulkDeleteProjectsDialog } from '@/features/projects/components/bulk-delete-projects-dialog';
 import {
   DeleteProjectDialog,
   useDeleteProjectDialog,
 } from '@/features/projects/components/delete-project-dialog';
 import { ProjectsTable } from '@/features/projects/components/projects-table';
 import { PROJECT_MODULE_CONFIG, PROJECT_STATUS_OPTIONS } from '@/features/projects/config/project.config';
+import {
+  useBulkUpdateProjectFeatured,
+  useBulkUpdateProjectStatus,
+  useUpdateProjectFeaturedMutation,
+  useUpdateProjectStatusMutation,
+} from '@/features/projects/hooks/use-project-mutations';
 import { useProjects } from '@/features/projects/hooks/use-projects';
+import type { Project, ProjectStatus } from '@/features/projects/types/project.types';
 import { MODULE_PERMISSIONS } from '@/constants/permissions';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/features/auth/providers/auth-provider';
-import type { ProjectStatus } from '@/features/projects/types/project.types';
 
 export function ProjectsModuleView() {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission(MODULE_PERMISSIONS.projects.write);
   const canDelete = hasPermission(MODULE_PERMISSIONS.projects.delete);
+  const canPublish = hasPermission(MODULE_PERMISSIONS.projects.publish);
+  const canBulkSelect = canWrite || canPublish || canDelete;
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<ProjectStatus | 'ALL'>('ALL');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const deleteDialog = useDeleteProjectDialog();
+  const statusMutation = useUpdateProjectStatusMutation();
+  const bulkStatusMutation = useBulkUpdateProjectStatus();
+  const featuredMutation = useUpdateProjectFeaturedMutation();
+  const bulkFeaturedMutation = useBulkUpdateProjectFeatured();
 
   const queryParams = useMemo(
     () => ({
@@ -51,6 +66,51 @@ export function ProjectsModuleView() {
   );
 
   const { data, isLoading, isError, refetch } = useProjects(queryParams);
+
+  const selectedProjects = useMemo(() => {
+    if (!data?.items.length || selectedIds.length === 0) return [];
+    const idSet = new Set(selectedIds);
+    return data.items.filter((project) => idSet.has(project.id));
+  }, [data?.items, selectedIds]);
+
+  const showBulkPublish = selectedProjects.some((project) => project.status !== 'PUBLISHED');
+  const showBulkUnpublish = selectedProjects.some((project) => project.status === 'PUBLISHED');
+  const showBulkFeature = selectedProjects.some((project) => !project.featured);
+  const showBulkUnfeature = selectedProjects.some((project) => project.featured);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [page, search, status]);
+
+  const isBulkBusy =
+    statusMutation.isPending ||
+    bulkStatusMutation.isPending ||
+    featuredMutation.isPending ||
+    bulkFeaturedMutation.isPending;
+
+  const handleStatusChange = (project: Project, nextStatus: ProjectStatus) => {
+    statusMutation.mutate({ id: project.id, status: nextStatus });
+  };
+
+  const handleFeaturedChange = (project: Project, featured: boolean) => {
+    featuredMutation.mutate({ id: project.id, featured });
+  };
+
+  const handleBulkStatusChange = (nextStatus: ProjectStatus) => {
+    if (selectedIds.length === 0) return;
+    bulkStatusMutation.mutate(
+      { ids: selectedIds, status: nextStatus },
+      { onSuccess: () => setSelectedIds([]) }
+    );
+  };
+
+  const handleBulkFeaturedChange = (featured: boolean) => {
+    if (selectedIds.length === 0) return;
+    bulkFeaturedMutation.mutate(
+      { ids: selectedIds, featured },
+      { onSuccess: () => setSelectedIds([]) }
+    );
+  };
 
   return (
     <ProjectModuleShell
@@ -117,11 +177,83 @@ export function ProjectsModuleView() {
 
         {!isLoading && !isError && data && data.items.length > 0 ? (
           <>
+            {selectedIds.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 px-4 py-3">
+                <span className="text-sm font-medium">{selectedIds.length} selected</span>
+                {canPublish && showBulkPublish ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isBulkBusy}
+                    onClick={() => handleBulkStatusChange('PUBLISHED')}
+                  >
+                    <Eye className="mr-2 h-4 w-4" />
+                    Publish
+                  </Button>
+                ) : null}
+                {canPublish && showBulkUnpublish ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isBulkBusy}
+                    onClick={() => handleBulkStatusChange('DRAFT')}
+                  >
+                    <EyeOff className="mr-2 h-4 w-4" />
+                    Unpublish
+                  </Button>
+                ) : null}
+                {canWrite && showBulkFeature ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isBulkBusy}
+                    onClick={() => handleBulkFeaturedChange(true)}
+                  >
+                    <Star className="mr-2 h-4 w-4" />
+                    Feature
+                  </Button>
+                ) : null}
+                {canWrite && showBulkUnfeature ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isBulkBusy}
+                    onClick={() => handleBulkFeaturedChange(false)}
+                  >
+                    <StarOff className="mr-2 h-4 w-4" />
+                    Unfeature
+                  </Button>
+                ) : null}
+                {canDelete ? (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    disabled={isBulkBusy}
+                    onClick={() => setBulkDeleteOpen(true)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
+                ) : null}
+                <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>
+                  Clear
+                </Button>
+              </div>
+            ) : null}
+
             <ProjectsTable
               projects={data.items}
               canWrite={canWrite}
               canDelete={canDelete}
+              canPublish={canPublish}
+              selectable={canBulkSelect}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
               onDelete={deleteDialog.openDialog}
+              onStatusChange={handleStatusChange}
+              onFeaturedChange={handleFeaturedChange}
+              isStatusUpdating={statusMutation.isPending}
+              isFeaturedUpdating={featuredMutation.isPending}
             />
             <Pagination
               page={data.pagination.page}
@@ -136,6 +268,13 @@ export function ProjectsModuleView() {
         project={deleteDialog.project}
         open={deleteDialog.open}
         onOpenChange={deleteDialog.setOpen}
+      />
+
+      <BulkDeleteProjectsDialog
+        projectIds={selectedIds}
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        onDeleted={() => setSelectedIds([])}
       />
     </ProjectModuleShell>
   );

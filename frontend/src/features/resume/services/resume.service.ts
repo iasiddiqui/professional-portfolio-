@@ -6,6 +6,7 @@ import type {
   Resume,
   ResumeListParams,
   ResumeListResult,
+  ResumeUploadResult,
   UpdateResumePayload,
 } from '@/features/resume/types/resume.types';
 
@@ -38,6 +39,15 @@ export const resumeService = {
 
   create(payload: CreateResumePayload) {
     return apiRequest<Resume>(() => api.post<ApiResponse<Resume>>(API_ENDPOINTS.resume, payload));
+  },
+
+  upload(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return apiRequest<ResumeUploadResult>(() =>
+      api.post<ApiResponse<ResumeUploadResult>>(API_ENDPOINTS.resumeUpload, formData)
+    );
   },
 
   update(id: string, payload: UpdateResumePayload) {

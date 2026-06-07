@@ -1,11 +1,11 @@
-import { AdminLayout } from '@/components/layout/admin-layout';
-import { buildNoIndexMetadata } from '@/lib/seo/metadata';
-import { getSeoSiteConfig } from '@/lib/seo/site-config';
+import type { Metadata } from 'next';
 
-export async function generateMetadata() {
-  const site = await getSeoSiteConfig();
-  return buildNoIndexMetadata('Admin', site);
-}
+import { AdminLayout } from '@/components/layout/admin-layout';
+
+export const metadata: Metadata = {
+  title: 'Admin',
+  robots: { index: false, follow: false },
+};
 
 export default function AdminRouteLayout({ children }: { children: React.ReactNode }) {
   return <AdminLayout>{children}</AdminLayout>;

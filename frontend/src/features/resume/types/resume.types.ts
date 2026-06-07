@@ -35,3 +35,10 @@ export interface CreateResumePayload {
 }
 
 export type UpdateResumePayload = Partial<CreateResumePayload>;
+
+export interface ResumeUploadResult {
+  url: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+}

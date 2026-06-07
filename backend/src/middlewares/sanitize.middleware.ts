@@ -47,7 +47,14 @@ function sanitizeInPlace(target: Record<string, unknown>): void {
 
 export function sanitizeRequest(req: Request, _res: Response, next: NextFunction): void {
   if (req.body && typeof req.body === 'object') {
-    req.body = sanitizeValue(req.body);
+    const body = req.body as Record<string, unknown>;
+    const rawContent = body.content;
+
+    req.body = sanitizeValue(body);
+
+    if (typeof rawContent === 'string') {
+      (req.body as Record<string, unknown>).content = rawContent;
+    }
   }
 
   // Express 5 exposes query/params as read-only getters — mutate in place.

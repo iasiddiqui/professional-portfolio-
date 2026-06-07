@@ -3,6 +3,8 @@ import type { Request, Response } from 'express';
 import { HTTP_STATUS } from '../../constants/http-status.js';
 import { asyncHandler } from '../../utils/async-handler.js';
 import { buildPaginationMeta, sendPaginated, sendSuccess } from '../../utils/api-response.js';
+import { AppError } from '../../utils/app-error.js';
+import { getPublicUploadUrl } from '../../utils/upload.js';
 import { getValidatedQuery } from '../../utils/validated-request.js';
 import { resumeService } from './resume.service.js';
 import type {
@@ -25,6 +27,23 @@ export class ResumeController {
   create = asyncHandler(async (req: Request, res: Response) => {
     const resume = await resumeService.create(req.body as CreateResumeInput, req.user!.permissions);
     sendSuccess(res, resume, { status: HTTP_STATUS.CREATED, message: 'Resume created successfully' });
+  });
+
+  upload = asyncHandler(async (req: Request, res: Response) => {
+    if (!req.file) {
+      throw new AppError('No file uploaded', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    sendSuccess(
+      res,
+      {
+        url: getPublicUploadUrl(req.file.filename),
+        filename: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+      },
+      { status: HTTP_STATUS.CREATED, message: 'Resume file uploaded successfully' }
+    );
   });
 
   update = asyncHandler(async (req: Request, res: Response) => {

@@ -8,11 +8,12 @@ import { blogCategoryService } from '@/features/blog/services/blog-category.serv
 import { tagService } from '@/features/blog/services/tag.service';
 import type { BlogListParams } from '@/features/blog/types/blog.types';
 
-export function useBlogPosts(params?: BlogListParams) {
+export function useBlogPosts(params?: BlogListParams, enabled = true) {
   return useQuery({
     queryKey: QUERY_KEYS.blog.list(params),
     queryFn: () => blogService.list(params),
     staleTime: QUERY_STALE_TIME.default,
+    enabled,
   });
 }
 

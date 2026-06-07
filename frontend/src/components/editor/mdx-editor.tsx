@@ -17,6 +17,7 @@ interface MdxEditorProps {
   error?: string;
   className?: string;
   minRows?: number;
+  compact?: boolean;
 }
 
 export function MdxEditor({
@@ -28,6 +29,7 @@ export function MdxEditor({
   error,
   className,
   minRows = 16,
+  compact = false,
 }: MdxEditorProps) {
   const content = value ?? '';
   const wordCount = countWords(content);
@@ -35,22 +37,24 @@ export function MdxEditor({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Label htmlFor={id}>{label}</Label>
-          <Badge variant="secondary" className="gap-1">
-            <FileCode2 className="h-3 w-3" />
-            MDX
-          </Badge>
+      {!compact ? (
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Label htmlFor={id}>{label}</Label>
+            <Badge variant="secondary" className="gap-1">
+              <FileCode2 className="h-3 w-3" />
+              MDX
+            </Badge>
+          </div>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span>{wordCount} words</span>
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {readingTime} min read
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span>{wordCount} words</span>
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {readingTime} min read
-          </span>
-        </div>
-      </div>
+      ) : null}
       <Textarea
         id={id}
         value={content}
@@ -60,9 +64,11 @@ export function MdxEditor({
         className="min-h-[320px] font-mono text-sm leading-relaxed"
         spellCheck={false}
       />
-      <p className="text-xs text-muted-foreground">
-        Supports MDX syntax — headings, code blocks, JSX components, and markdown formatting.
-      </p>
+      {!compact ? (
+        <p className="text-xs text-muted-foreground">
+          Supports MDX syntax — headings, code blocks, JSX components, and markdown formatting.
+        </p>
+      ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>
   );

@@ -4,6 +4,7 @@ import { BarChart3, FileText, FolderKanban, Inbox } from 'lucide-react';
 import Link from 'next/link';
 
 import { AdminPageHeader } from '@/features/admin/components/admin-page-header';
+import { AdminContentStatsWidgets } from '@/features/admin/components/admin-content-stats-widgets';
 import { useAdminNavigation } from '@/features/admin/hooks/use-admin-navigation';
 import { LeadStatsWidgets } from '@/features/leads/components/lead-stats-widgets';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,6 +48,9 @@ export function AdminDashboardOverview() {
   const { user, hasPermission } = useAuth();
   const { flatItems } = useAdminNavigation();
   const canViewLeads = hasPermission(MODULE_PERMISSIONS.leads.read);
+  const canViewProjects = hasPermission(MODULE_PERMISSIONS.projects.read);
+  const canViewBlog = hasPermission(MODULE_PERMISSIONS.blog.read);
+  const showContentStats = canViewProjects || canViewBlog;
 
   const accessibleLinks = quickLinks.filter((link) =>
     user?.permissions.includes(link.permission)
@@ -59,6 +63,15 @@ export function AdminDashboardOverview() {
         description="Overview of your portfolio platform admin dashboard."
         breadcrumbs={[{ label: 'Dashboard' }]}
       />
+
+      {showContentStats ? (
+        <SlideUp>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Content</h2>
+          </div>
+          <AdminContentStatsWidgets />
+        </SlideUp>
+      ) : null}
 
       {canViewLeads ? (
         <SlideUp>

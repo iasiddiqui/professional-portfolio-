@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, ExternalLink, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { CheckCircle2, CircleOff, ExternalLink, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { Resume } from '@/features/resume/types/resume.types';
+import { resolveMediaUrl } from '@/lib/media-url';
+import { cn } from '@/lib/utils';
 import { formatDate } from '@/utils/date';
 
 interface ResumeTableProps {
@@ -27,10 +29,18 @@ interface ResumeTableProps {
   canWrite?: boolean;
   onEdit?: (resume: Resume) => void;
   onDelete?: (resume: Resume) => void;
-  onActivate?: (resume: Resume) => void;
+  onActiveToggle?: (resume: Resume, isActive: boolean) => void;
+  isActiveUpdating?: boolean;
 }
 
-export function ResumeTable({ resumes, canWrite, onEdit, onDelete, onActivate }: ResumeTableProps) {
+export function ResumeTable({
+  resumes,
+  canWrite,
+  onEdit,
+  onDelete,
+  onActiveToggle,
+  isActiveUpdating = false,
+}: ResumeTableProps) {
   return (
     <div className="rounded-lg border">
       <Table>
@@ -44,20 +54,25 @@ export function ResumeTable({ resumes, canWrite, onEdit, onDelete, onActivate }:
           </TableRow>
         </TableHeader>
         <TableBody>
-          {resumes.map((resume) => (
+          {resumes.map((resume) => {
+            const fileUrl = resolveMediaUrl(resume.fileUrl);
+
+            return (
             <TableRow key={resume.id}>
               <TableCell>
                 <div className="space-y-1">
                   <span className="font-medium">{resume.title}</span>
-                  <a
-                    href={resume.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-sm text-accent hover:underline"
-                  >
-                    View file
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+                  {fileUrl ? (
+                    <a
+                      href={fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-sm text-accent hover:underline"
+                    >
+                      View file
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  ) : null}
                 </div>
               </TableCell>
               <TableCell>
@@ -65,12 +80,22 @@ export function ResumeTable({ resumes, canWrite, onEdit, onDelete, onActivate }:
               </TableCell>
               <TableCell>
                 {resume.isActive ? (
-                  <Badge variant="accent" className="gap-1">
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      'gap-1 border-transparent bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                    )}
+                  >
                     <CheckCircle2 className="h-3 w-3" />
                     Active
                   </Badge>
                 ) : (
-                  <Badge variant="secondary">Inactive</Badge>
+                  <Badge
+                    variant="outline"
+                    className="border-transparent bg-destructive/10 text-destructive"
+                  >
+                    Inactive
+                  </Badge>
                 )}
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
@@ -89,12 +114,22 @@ export function ResumeTable({ resumes, canWrite, onEdit, onDelete, onActivate }:
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                       </DropdownMenuItem>
-                      {!resume.isActive ? (
-                        <DropdownMenuItem onClick={() => onActivate?.(resume)}>
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Set as active
-                        </DropdownMenuItem>
-                      ) : null}
+                      <DropdownMenuItem
+                        disabled={isActiveUpdating}
+                        onClick={() => onActiveToggle?.(resume, !resume.isActive)}
+                      >
+                        {resume.isActive ? (
+                          <>
+                            <CircleOff className="mr-2 h-4 w-4" />
+                            Set as inactive
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Set as active
+                          </>
+                        )}
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
@@ -108,7 +143,8 @@ export function ResumeTable({ resumes, canWrite, onEdit, onDelete, onActivate }:
                 ) : null}
               </TableCell>
             </TableRow>
-          ))}
+            );
+          })}
         </TableBody>
       </Table>
     </div>

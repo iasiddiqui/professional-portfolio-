@@ -1,4 +1,4 @@
-export type ContentFormat = 'MDX' | 'MARKDOWN';
+export type ContentFormat = 'MDX' | 'MARKDOWN' | 'HTML';
 
 export interface BlogTag {
   id: string;

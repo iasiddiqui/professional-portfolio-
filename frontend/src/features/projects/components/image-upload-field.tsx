@@ -3,7 +3,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { ImagePlus, Loader2, Trash2, Upload } from 'lucide-react';
 import Image from 'next/image';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -129,19 +129,28 @@ export function GalleryUploadField({
   className,
 }: GalleryUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const uploadMutation = useMutation({
-    mutationFn: (file: File) => mediaService.upload(file),
-    onSuccess: (media) => onAdd(media),
-    onError: (error) => toast.error(getErrorMessage(error, 'Upload failed')),
-  });
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFilesChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
-    for (const file of files) {
-      await uploadMutation.mutateAsync(file);
-    }
     event.target.value = '';
+
+    if (files.length === 0) {
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      for (const file of files) {
+        const media = await mediaService.upload(file);
+        onAdd(media);
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Upload failed'));
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -151,8 +160,18 @@ export function GalleryUploadField({
           <Label>{label}</Label>
           {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={uploadMutation.isPending}>
-          <Upload className="mr-2 h-4 w-4" />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => inputRef.current?.click()}
+          disabled={isUploading}
+        >
+          {isUploading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Upload className="mr-2 h-4 w-4" />
+          )}
           Add images
         </Button>
       </div>

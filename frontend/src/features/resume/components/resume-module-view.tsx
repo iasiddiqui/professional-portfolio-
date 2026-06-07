@@ -13,11 +13,15 @@ import {
   DeleteResumeDialog,
   useDeleteResumeDialog,
 } from '@/features/resume/components/delete-resume-dialog';
+import {
+  ActivateResumeDialog,
+  useActivateResumeDialog,
+} from '@/features/resume/components/activate-resume-dialog';
 import { ResumeFilters, type ResumeFiltersState } from '@/features/resume/components/resume-filters';
 import { ResumeFormDialog } from '@/features/resume/components/resume-form-dialog';
 import { ResumeTable } from '@/features/resume/components/resume-table';
 import { RESUME_MODULE_CONFIG } from '@/features/resume/config/resume.config';
-import { useActivateResume } from '@/features/resume/hooks/use-resume-mutations';
+import { useSetResumeActive } from '@/features/resume/hooks/use-resume-mutations';
 import { useResumes } from '@/features/resume/hooks/use-resumes';
 import type { Resume } from '@/features/resume/types/resume.types';
 import { MODULE_PERMISSIONS } from '@/constants/permissions';
@@ -35,7 +39,11 @@ export function ResumeModuleView() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Resume | null>(null);
   const deleteDialog = useDeleteResumeDialog();
-  const activateMutation = useActivateResume();
+  const activateDialog = useActivateResumeDialog();
+  const activeMutation = useSetResumeActive();
+
+  const { data: activeResumeData } = useResumes({ page: 1, limit: 1, isActive: true });
+  const currentActiveResume = activeResumeData?.items[0] ?? null;
 
   const queryParams = useMemo(
     () => ({
@@ -64,8 +72,18 @@ export function ResumeModuleView() {
     setFormOpen(true);
   };
 
-  const handleActivate = (resume: Resume) => {
-    void activateMutation.mutateAsync(resume.id);
+  const handleActiveToggle = (resume: Resume, isActive: boolean) => {
+    if (!isActive) {
+      void activeMutation.mutateAsync({ id: resume.id, isActive: false });
+      return;
+    }
+
+    if (currentActiveResume && currentActiveResume.id !== resume.id) {
+      activateDialog.openDialog({ target: resume, currentActive: currentActiveResume });
+      return;
+    }
+
+    void activeMutation.mutateAsync({ id: resume.id, isActive: true });
   };
 
   return (
@@ -103,7 +121,8 @@ export function ResumeModuleView() {
               canWrite={canWrite}
               onEdit={openEdit}
               onDelete={deleteDialog.openDialog}
-              onActivate={handleActivate}
+              onActiveToggle={handleActiveToggle}
+              isActiveUpdating={activeMutation.isPending}
             />
             <Pagination
               page={data.pagination.page}
@@ -120,6 +139,12 @@ export function ResumeModuleView() {
         resume={deleteDialog.resume}
         open={deleteDialog.open}
         onOpenChange={deleteDialog.setOpen}
+      />
+
+      <ActivateResumeDialog
+        state={activateDialog.state}
+        open={activateDialog.open}
+        onOpenChange={activateDialog.setOpen}
       />
     </ResumeModuleShell>
   );

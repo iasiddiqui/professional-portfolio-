@@ -69,6 +69,7 @@ export function EditBlogPostView({ postId }: EditBlogPostViewProps) {
         onSubmit={handleSubmit}
         submitLabel="Save changes"
         isSubmitting={updateMutation.isPending}
+        syncSlugFromTitle={false}
       />
     </BlogModuleShell>
   );

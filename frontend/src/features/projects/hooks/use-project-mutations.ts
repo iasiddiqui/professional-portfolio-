@@ -59,6 +59,137 @@ export function useUpdateProjectStatus(id: string) {
   });
 }
 
+export function useUpdateProjectStatusMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: UpdateProjectStatusPayload['status'] }) =>
+      projectService.updateStatus(id, { status }),
+    onSuccess: (project) => {
+      queryClient.setQueryData(QUERY_KEYS.projects.detail(project.id), project);
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.projects.all });
+      toast.success(
+        project.status === 'PUBLISHED' ? 'Project published' : 'Project unpublished'
+      );
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to update status'));
+    },
+  });
+}
+
+export function useBulkUpdateProjectStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      ids,
+      status,
+    }: {
+      ids: string[];
+      status: UpdateProjectStatusPayload['status'];
+    }) => {
+      const results = await Promise.allSettled(
+        ids.map((id) => projectService.updateStatus(id, { status }))
+      );
+      const succeeded = results.filter((result) => result.status === 'fulfilled').length;
+      const failed = ids.length - succeeded;
+
+      if (succeeded === 0) {
+        throw new Error(
+          `Failed to ${status === 'PUBLISHED' ? 'publish' : 'unpublish'} selected projects`
+        );
+      }
+
+      return { succeeded, failed, status };
+    },
+    onSuccess: ({ succeeded, failed, status }) => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.projects.all });
+      const action = status === 'PUBLISHED' ? 'published' : 'unpublished';
+      if (failed > 0) {
+        toast.success(`${succeeded} project(s) ${action}, ${failed} failed`);
+      } else {
+        toast.success(`${succeeded} project(s) ${action}`);
+      }
+    },
+    onError: (error) => toast.error(getErrorMessage(error, 'Bulk status update failed')),
+  });
+}
+
+export function useUpdateProjectFeaturedMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, featured }: { id: string; featured: boolean }) =>
+      projectService.update(id, { featured }),
+    onSuccess: (project) => {
+      queryClient.setQueryData(QUERY_KEYS.projects.detail(project.id), project);
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.projects.all });
+      toast.success(project.featured ? 'Project featured' : 'Project unfeatured');
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to update featured status'));
+    },
+  });
+}
+
+export function useBulkUpdateProjectFeatured() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ ids, featured }: { ids: string[]; featured: boolean }) => {
+      const results = await Promise.allSettled(
+        ids.map((id) => projectService.update(id, { featured }))
+      );
+      const succeeded = results.filter((result) => result.status === 'fulfilled').length;
+      const failed = ids.length - succeeded;
+
+      if (succeeded === 0) {
+        throw new Error(`Failed to ${featured ? 'feature' : 'unfeature'} selected projects`);
+      }
+
+      return { succeeded, failed, featured };
+    },
+    onSuccess: ({ succeeded, failed, featured }) => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.projects.all });
+      const action = featured ? 'featured' : 'unfeatured';
+      if (failed > 0) {
+        toast.success(`${succeeded} project(s) ${action}, ${failed} failed`);
+      } else {
+        toast.success(`${succeeded} project(s) ${action}`);
+      }
+    },
+    onError: (error) => toast.error(getErrorMessage(error, 'Bulk featured update failed')),
+  });
+}
+
+export function useBulkDeleteProjects() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => projectService.delete(id)));
+      const succeeded = results.filter((result) => result.status === 'fulfilled').length;
+      const failed = ids.length - succeeded;
+
+      if (succeeded === 0) {
+        throw new Error('Failed to delete selected projects');
+      }
+
+      return { succeeded, failed };
+    },
+    onSuccess: ({ succeeded, failed }) => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.projects.all });
+      if (failed > 0) {
+        toast.success(`${succeeded} project(s) deleted, ${failed} failed`);
+      } else {
+        toast.success(`${succeeded} project(s) deleted`);
+      }
+    },
+    onError: (error) => toast.error(getErrorMessage(error, 'Bulk delete failed')),
+  });
+}
+
 export function useDeleteProject() {
   const queryClient = useQueryClient();
 

@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
   leads: '/leads',
   testimonials: '/testimonials',
   resume: '/resume',
+  resumeUpload: '/resume/upload',
   knowledgeBase: '/knowledge-base',
   analytics: '/analytics',
   settings: '/settings',

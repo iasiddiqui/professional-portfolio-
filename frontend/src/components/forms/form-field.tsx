@@ -23,6 +23,7 @@ interface FormFieldProps<T extends FieldValues> {
   type?: string;
   as?: 'input' | 'textarea';
   className?: string;
+  onValueChange?: (value: string) => void;
 }
 
 export function FormField<T extends FieldValues>({
@@ -33,11 +34,20 @@ export function FormField<T extends FieldValues>({
   type = 'text',
   as = 'input',
   className,
+  onValueChange,
 }: FormFieldProps<T>) {
   const fieldId = String(name);
   const errorId = `${fieldId}-error`;
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordField = type === 'password';
+
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    onChange: (value: string) => void
+  ) => {
+    onChange(event.target.value);
+    onValueChange?.(event.target.value);
+  };
 
   return (
     <Controller
@@ -52,7 +62,11 @@ export function FormField<T extends FieldValues>({
               placeholder={placeholder}
               aria-invalid={fieldState.invalid || undefined}
               aria-describedby={fieldState.error ? errorId : undefined}
-              {...field}
+              name={field.name}
+              value={field.value ?? ''}
+              onBlur={field.onBlur}
+              ref={field.ref}
+              onChange={(event) => handleChange(event, field.onChange)}
             />
           ) : isPasswordField ? (
             <div className="relative">
@@ -63,7 +77,11 @@ export function FormField<T extends FieldValues>({
                 className="pr-10"
                 aria-invalid={fieldState.invalid || undefined}
                 aria-describedby={fieldState.error ? errorId : undefined}
-                {...field}
+                name={field.name}
+                value={field.value ?? ''}
+                onBlur={field.onBlur}
+                ref={field.ref}
+                onChange={(event) => handleChange(event, field.onChange)}
               />
               <Button
                 type="button"
@@ -84,7 +102,11 @@ export function FormField<T extends FieldValues>({
               placeholder={placeholder}
               aria-invalid={fieldState.invalid || undefined}
               aria-describedby={fieldState.error ? errorId : undefined}
-              {...field}
+              name={field.name}
+              value={field.value ?? ''}
+              onBlur={field.onBlur}
+              ref={field.ref}
+              onChange={(event) => handleChange(event, field.onChange)}
             />
           )}
           {fieldState.error ? (

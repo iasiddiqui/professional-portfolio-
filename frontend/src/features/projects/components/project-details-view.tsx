@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink, Github, Pencil, Star, Trash2 } from 'lucide-react';
+import { ExternalLink, Eye, EyeOff, Github, Pencil, Star, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -16,9 +16,11 @@ import {
 } from '@/features/projects/components/delete-project-dialog';
 import { ProjectStatusBadge } from '@/features/projects/components/project-status-badge';
 import { useProject } from '@/features/projects/hooks/use-projects';
+import { useUpdateProjectStatusMutation } from '@/features/projects/hooks/use-project-mutations';
 import { MODULE_PERMISSIONS } from '@/constants/permissions';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/features/auth/providers/auth-provider';
+import { resolveMediaUrl } from '@/lib/media-url';
 import { formatDateTime } from '@/utils/date';
 import { useRouter } from 'next/navigation';
 
@@ -31,7 +33,9 @@ export function ProjectDetailsView({ projectId }: ProjectDetailsViewProps) {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission(MODULE_PERMISSIONS.projects.write);
   const canDelete = hasPermission(MODULE_PERMISSIONS.projects.delete);
+  const canPublish = hasPermission(MODULE_PERMISSIONS.projects.publish);
   const deleteDialog = useDeleteProjectDialog();
+  const statusMutation = useUpdateProjectStatusMutation();
 
   const { data: project, isLoading, isError, refetch } = useProject(projectId);
 
@@ -62,6 +66,31 @@ export function ProjectDetailsView({ projectId }: ProjectDetailsViewProps) {
       ]}
       actions={
         <div className="flex items-center gap-2">
+          {canPublish ? (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={statusMutation.isPending}
+              onClick={() =>
+                statusMutation.mutate({
+                  id: project.id,
+                  status: project.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED',
+                })
+              }
+            >
+              {project.status === 'PUBLISHED' ? (
+                <>
+                  <EyeOff className="mr-2 h-4 w-4" />
+                  Unpublish
+                </>
+              ) : (
+                <>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Publish
+                </>
+              )}
+            </Button>
+          ) : null}
           {canWrite ? (
             <Button variant="outline" size="sm" asChild>
               <Link href={ROUTES.admin.projectEdit(project.id)}>
@@ -85,11 +114,11 @@ export function ProjectDetailsView({ projectId }: ProjectDetailsViewProps) {
             <Card className="overflow-hidden">
               <div className="relative aspect-[16/9] w-full">
                 <Image
-                  src={project.thumbnail.url}
+                  src={resolveMediaUrl(project.thumbnail.url)!}
                   alt={project.title}
                   fill
                   className="object-cover"
-                  unoptimized
+                  sizes="(max-width: 1280px) 100vw, 66vw"
                   priority
                 />
               </div>
@@ -126,7 +155,13 @@ export function ProjectDetailsView({ projectId }: ProjectDetailsViewProps) {
                 <div className="grid gap-4 sm:grid-cols-2">
                   {project.gallery.map((image) => (
                     <div key={image.id} className="relative aspect-video overflow-hidden rounded-lg border">
-                      <Image src={image.url} alt={image.alt ?? project.title} fill className="object-cover" unoptimized />
+                      <Image
+                        src={resolveMediaUrl(image.url)!}
+                        alt={image.alt ?? project.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 33vw"
+                      />
                     </div>
                   ))}
                 </div>

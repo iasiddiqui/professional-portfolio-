@@ -2,9 +2,27 @@ import { z } from 'zod';
 
 import { paginationQuerySchema } from '../../validators/pagination.validator.js';
 
+const resumeFileUrlSchema = z
+  .string()
+  .trim()
+  .min(1, 'Resume file is required')
+  .refine(
+    (value) => {
+      if (value.startsWith('/uploads/')) return true;
+
+      try {
+        const parsed = new URL(value);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    },
+    'Must be a valid URL or uploaded file path'
+  );
+
 const resumeFieldsSchema = z.object({
   title: z.string().trim().min(1).max(200),
-  fileUrl: z.string().trim().url(),
+  fileUrl: resumeFileUrlSchema,
   version: z.string().trim().min(1).max(50),
   isActive: z.boolean().default(false),
 });

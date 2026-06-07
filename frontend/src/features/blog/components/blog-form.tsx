@@ -1,12 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
 import { Controller, useWatch, type UseFormReturn } from 'react-hook-form';
 
 import { FormCheckboxField } from '@/components/forms/form-checkbox-field';
 import { FormField } from '@/components/forms/form-field';
-import { FeaturedImageField, SeoFields } from '@/components/editor';
-import { MdxEditor } from '@/components/editor/mdx-editor';
+import { FeaturedImageField, SeoFields, BlogContentEditor } from '@/components/editor';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -17,16 +15,17 @@ import { useBlogCategories, useTags } from '@/features/blog/hooks/use-blog';
 import { mediaService } from '@/features/projects/services/media.service';
 import { useAuth } from '@/features/auth/providers/auth-provider';
 import { MODULE_PERMISSIONS } from '@/constants/permissions';
-import { slugify } from '@/utils/string';
+import { useAutoSlugSync } from '@/hooks/use-auto-slug-sync';
 
 interface BlogFormProps {
   form: UseFormReturn<BlogFormValues>;
   onSubmit: (values: BlogFormValues) => Promise<void> | void;
   submitLabel: string;
   isSubmitting?: boolean;
+  syncSlugFromTitle?: boolean;
 }
 
-export function BlogForm({ form, onSubmit, submitLabel, isSubmitting = false }: BlogFormProps) {
+export function BlogForm({ form, onSubmit, submitLabel, isSubmitting = false, syncSlugFromTitle = true }: BlogFormProps) {
   const { hasPermission } = useAuth();
   const canPublish = hasPermission(MODULE_PERMISSIONS.blog.publish);
 
@@ -34,15 +33,9 @@ export function BlogForm({ form, onSubmit, submitLabel, isSubmitting = false }: 
   const { data: tags = [] } = useTags();
 
   const title = useWatch({ control: form.control, name: 'title' });
-  const slug = useWatch({ control: form.control, name: 'slug' });
+  const { markSlugManual } = useAutoSlugSync(form, { title, enabled: syncSlugFromTitle });
   const tagIds = useWatch({ control: form.control, name: 'tagIds' });
   const featuredImage = useWatch({ control: form.control, name: 'featuredImage' });
-
-  useEffect(() => {
-    if (!slug && title) {
-      form.setValue('slug', slugify(title), { shouldDirty: true });
-    }
-  }, [form, slug, title]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
     await onSubmit(values);
@@ -60,11 +53,17 @@ export function BlogForm({ form, onSubmit, submitLabel, isSubmitting = false }: 
           <Card>
             <CardHeader>
               <CardTitle>Post details</CardTitle>
-              <CardDescription>Title, excerpt, and MDX content.</CardDescription>
+              <CardDescription>Title, excerpt, and post content.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField control={form.control} name="title" label="Title" placeholder="My blog post" />
-              <FormField control={form.control} name="slug" label="Slug" placeholder="my-blog-post" />
+              <FormField
+                control={form.control}
+                name="slug"
+                label="Slug"
+                placeholder="my-blog-post"
+                onValueChange={markSlugManual}
+              />
               <FormField
                 control={form.control}
                 name="excerpt"
@@ -76,9 +75,13 @@ export function BlogForm({ form, onSubmit, submitLabel, isSubmitting = false }: 
                 control={form.control}
                 name="content"
                 render={({ field, fieldState }) => (
-                  <MdxEditor
+                  <BlogContentEditor
                     value={field.value}
+                    contentFormat={form.watch('contentFormat')}
                     onChange={field.onChange}
+                    onContentFormatChange={(format) =>
+                      form.setValue('contentFormat', format, { shouldDirty: true })
+                    }
                     error={fieldState.error?.message}
                   />
                 )}

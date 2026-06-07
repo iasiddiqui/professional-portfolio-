@@ -1,6 +1,22 @@
 import { z } from 'zod';
 
-export const contentFormatSchema = z.enum(['MDX', 'MARKDOWN']);
+export const contentFormatSchema = z.enum(['MDX', 'MARKDOWN', 'HTML']);
+
+function hasMeaningfulContent(content: string, format: z.infer<typeof contentFormatSchema>): boolean {
+  const trimmed = content.trim();
+  if (!trimmed) return false;
+
+  if (format === 'HTML') {
+    const text = trimmed
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return text.length > 0;
+  }
+
+  return true;
+}
 
 export const blogFormSchema = z
   .object({
@@ -24,6 +40,14 @@ export const blogFormSchema = z
     tagIds: z.array(z.string()),
   })
   .superRefine((values, ctx) => {
+    if (!hasMeaningfulContent(values.content, values.contentFormat)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Content is required',
+        path: ['content'],
+      });
+    }
+
     if (values.seoTitle && values.seoTitle.length > 70) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Max 70 characters', path: ['seoTitle'] });
     }
@@ -64,17 +88,19 @@ export const tagFormSchema = z.object({
 export type TagFormValues = z.infer<typeof tagFormSchema>;
 
 export function toBlogPayload(values: BlogFormValues) {
+  const featuredImage = values.featuredImage?.trim() ? values.featuredImage.trim() : null;
+
   return {
-    title: values.title,
-    slug: values.slug || undefined,
-    excerpt: values.excerpt,
+    title: values.title.trim(),
+    slug: values.slug?.trim() || undefined,
+    excerpt: values.excerpt.trim(),
     content: values.content,
     contentFormat: values.contentFormat,
-    featuredImage: values.featuredImage,
+    featuredImage,
     published: values.published,
-    seoTitle: values.seoTitle || null,
-    seoDescription: values.seoDescription || null,
-    categoryId: values.categoryId === '__none__' ? null : values.categoryId,
+    seoTitle: values.seoTitle.trim() || null,
+    seoDescription: values.seoDescription.trim() || null,
+    categoryId: values.categoryId === '__none__' || !values.categoryId ? null : values.categoryId,
     tagIds: values.tagIds,
   };
 }

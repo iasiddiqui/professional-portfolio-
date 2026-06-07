@@ -2,6 +2,7 @@ export { adminModules, adminNavigation } from './config/admin-navigation';
 export { useAdminNavigation } from './hooks/use-admin-navigation';
 export { AdminBreadcrumbs } from './components/admin-breadcrumbs';
 export { AdminDashboardOverview } from './components/admin-dashboard-overview';
+export { AdminContentStatsWidgets } from './components/admin-content-stats-widgets';
 export { AdminHeader } from './components/admin-header';
 export { AdminMobileNav } from './components/admin-mobile-nav';
 export { AdminNavItemLink } from './components/admin-nav-item';

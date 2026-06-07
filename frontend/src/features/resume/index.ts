@@ -3,12 +3,15 @@ export {
   useActivateResume,
   useCreateResume,
   useDeleteResume,
+  useSetResumeActive,
   useUpdateResume,
 } from './hooks/use-resume-mutations';
 export { useResumes, useResume } from './hooks/use-resumes';
 export { resumeService } from './services/resume.service';
 export { ResumeModuleView } from './components/resume-module-view';
 export {
+  createResumeFormDefaultValues,
+  generateResumeVersion,
   resumeFormDefaultValues,
   resumeFormSchema,
   toResumeFormValues,

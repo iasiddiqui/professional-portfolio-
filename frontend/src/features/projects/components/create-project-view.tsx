@@ -20,8 +20,8 @@ export function CreateProjectView() {
   const form = useZodForm(projectFormSchema, projectFormDefaultValues);
 
   const handleSubmit = async (values: ProjectFormValues) => {
-    const project = await createMutation.mutateAsync(toProjectPayload(values));
-    router.push(ROUTES.admin.project(project.id));
+    await createMutation.mutateAsync(toProjectPayload(values));
+    router.replace(ROUTES.admin.projects);
   };
 
   return (

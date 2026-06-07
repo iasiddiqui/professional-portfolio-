@@ -14,7 +14,9 @@ import type { ProjectFormValues } from '@/features/projects/schemas/project.sche
 import type { ProjectMedia } from '@/features/projects/types/project.types';
 import { useAuth } from '@/features/auth/providers/auth-provider';
 import { MODULE_PERMISSIONS } from '@/constants/permissions';
-import { slugify } from '@/utils/string';
+import { useAutoSlugSync } from '@/hooks/use-auto-slug-sync';
+
+const EMPTY_GALLERY: ProjectMedia[] = [];
 
 interface ProjectFormProps {
   form: UseFormReturn<ProjectFormValues>;
@@ -23,6 +25,7 @@ interface ProjectFormProps {
   isSubmitting?: boolean;
   initialThumbnail?: ProjectMedia | null;
   initialGallery?: ProjectMedia[];
+  syncSlugFromTitle?: boolean;
 }
 
 export function ProjectForm({
@@ -31,7 +34,8 @@ export function ProjectForm({
   submitLabel,
   isSubmitting = false,
   initialThumbnail = null,
-  initialGallery = [],
+  initialGallery = EMPTY_GALLERY,
+  syncSlugFromTitle = true,
 }: ProjectFormProps) {
   const { hasPermission } = useAuth();
   const canPublish = hasPermission(MODULE_PERMISSIONS.projects.publish);
@@ -40,18 +44,15 @@ export function ProjectForm({
   const [galleryPreview, setGalleryPreview] = useState<ProjectMedia[]>(initialGallery);
 
   const title = useWatch({ control: form.control, name: 'title' });
-  const slug = useWatch({ control: form.control, name: 'slug' });
+  const { markSlugManual } = useAutoSlugSync(form, { title, enabled: syncSlugFromTitle });
+
+  const initialGalleryKey = initialGallery.map((item) => item.id).join(',');
+  const initialThumbnailKey = initialThumbnail?.id ?? '';
 
   useEffect(() => {
     setThumbnailPreview(initialThumbnail);
     setGalleryPreview(initialGallery);
-  }, [initialGallery, initialThumbnail]);
-
-  useEffect(() => {
-    if (!slug && title) {
-      form.setValue('slug', slugify(title), { shouldDirty: true });
-    }
-  }, [form, slug, title]);
+  }, [initialGallery, initialGalleryKey, initialThumbnail, initialThumbnailKey]);
 
   const statusOptions = useMemo(
     () =>
@@ -92,6 +93,7 @@ export function ProjectForm({
                 name="slug"
                 label="Slug"
                 placeholder="portfolio-platform"
+                onValueChange={markSlugManual}
               />
               <FormField
                 control={form.control}

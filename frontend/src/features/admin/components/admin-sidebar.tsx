@@ -31,16 +31,44 @@ export function AdminSidebar({ collapsed = false, onNavigate, className }: Admin
         className
       )}
     >
-      <div className={cn('flex h-16 items-center border-b px-4', collapsed && 'justify-center px-2')}>
-        {collapsed ? (
-          <Link href={ROUTES.admin.dashboard} className="text-lg font-bold text-accent" onClick={onNavigate}>
-            P
-          </Link>
-        ) : (
-          <Link href={ROUTES.admin.dashboard} className="text-lg font-semibold" onClick={onNavigate}>
+      <div
+        className={cn(
+          'flex shrink-0 items-center border-b',
+          collapsed ? 'h-14 justify-center px-2' : 'h-16 justify-between gap-2 px-3'
+        )}
+      >
+        {!collapsed ? (
+          <Link href={ROUTES.admin.dashboard} className="min-w-0 truncate text-lg font-semibold" onClick={onNavigate}>
             Portfolio<span className="text-accent">.</span>Admin
           </Link>
+        ) : (
+          <Link
+            href={ROUTES.admin.dashboard}
+            className="sr-only"
+            onClick={onNavigate}
+            aria-label="Admin dashboard"
+          >
+            Dashboard
+          </Link>
         )}
+
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn(
+            'shrink-0 bg-background text-muted-foreground hover:text-foreground',
+            collapsed ? 'h-9 w-9' : 'h-8 w-8'
+          )}
+          onClick={toggleSidebar}
+          title={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          aria-label={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
+        </Button>
       </div>
 
       <nav className="flex-1 space-y-6 overflow-y-auto p-4">
@@ -54,9 +82,9 @@ export function AdminSidebar({ collapsed = false, onNavigate, className }: Admin
         ))}
       </nav>
 
-      <div className={cn('border-t p-4', collapsed && 'flex flex-col items-center gap-2')}>
+      <div className={cn('border-t p-4', collapsed && 'flex flex-col items-center')}>
         {!collapsed && user ? (
-          <div className="mb-3 flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-medium text-accent-foreground">
               {getInitials(user.name)}
             </div>
@@ -65,17 +93,14 @@ export function AdminSidebar({ collapsed = false, onNavigate, className }: Admin
               <p className="truncate text-xs text-muted-foreground">{user.role}</p>
             </div>
           </div>
+        ) : collapsed && user ? (
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-medium text-accent-foreground"
+            title={user.name}
+          >
+            {getInitials(user.name)}
+          </div>
         ) : null}
-        <Button
-          variant="ghost"
-          size={collapsed ? 'icon' : 'sm'}
-          className={cn(!collapsed && 'w-full justify-start')}
-          onClick={toggleSidebar}
-          aria-label={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-        >
-          {isSidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
-          {!collapsed && <span className="ml-2">{isSidebarOpen ? 'Collapse' : 'Expand'}</span>}
-        </Button>
       </div>
     </aside>
   );
