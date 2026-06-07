@@ -90,7 +90,7 @@ export function ImageUploadField({
           {uploadMutation.isPending ? (
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           ) : (
-            <MediaImagePlus className="h-8 w-8 text-muted-foreground" />
+            <ImagePlus className="h-8 w-8 text-muted-foreground" />
           )}
           <div>
             <p className="font-medium">Upload thumbnail</p>
