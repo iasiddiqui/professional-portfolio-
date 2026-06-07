@@ -27,7 +27,7 @@ const envSchema = z.object({
   AUTH_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(6),
   AUTH_REFRESH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
-  GEMINI_MODEL: z.string().min(1).default('gemini-2.0-flash'),
+  GEMINI_MODEL: z.string().min(1).default('gemini-2.5-flash'),
   ADMIN_EMAIL: z.string().email().optional(),
   ADMIN_PASSWORD: z.string().min(8).optional(),
   PUBLIC_URL: z.string().url().default('http://localhost:4000'),

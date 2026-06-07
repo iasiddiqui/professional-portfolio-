@@ -6,6 +6,11 @@ import { ROLE_LABELS, ROLE_PERMISSIONS } from '../src/constants/permissions.js';
 import { prisma } from '../src/lib/prisma.js';
 import { DEFAULT_SITE_EMAIL_TEMPLATES } from '../src/services/email/email-templates.defaults.js';
 import { hashPassword } from '../src/utils/password.js';
+import {
+  ABOUT_INTRO_BODY,
+  AI_KNOWLEDGE_ENTRIES,
+  SITE_PROFILE_DESCRIPTION,
+} from './data/ai-knowledge-base.js';
 
 async function seedRoles(): Promise<void> {
   for (const name of Object.values(RoleName)) {
@@ -71,15 +76,13 @@ async function seedSiteSettings(): Promise<void> {
     create: {
       id: 'default',
       siteName: 'Ishan Ahmad Siddiqui',
-      siteDescription:
-        'Software Engineer & Full Stack Developer — React.js, Next.js, Node.js, MongoDB. Building scalable web products from Hyderabad, India.',
+      siteDescription: SITE_PROFILE_DESCRIPTION,
       emailTemplates,
       maintenanceMode: false,
     },
     update: {
       siteName: 'Ishan Ahmad Siddiqui',
-      siteDescription:
-        'Software Engineer & Full Stack Developer — React.js, Next.js, Node.js, MongoDB. Building scalable web products from Hyderabad, India.',
+      siteDescription: SITE_PROFILE_DESCRIPTION,
       emailTemplates,
     },
   });
@@ -94,9 +97,7 @@ const ABOUT_SECTIONS = [
     category: 'about',
     content: JSON.stringify({
       format: 'text',
-      body: `I'm Ishan Ahmad Siddiqui, a software engineer and full-stack developer based in Hyderabad, India. I build web applications with React.js, Next.js, Node.js, and MongoDB — with a strong focus on clean architecture, performance, and maintainable code.
-
-I enjoy turning real-world problems into polished digital products, from responsive frontends to scalable backend services. I'm also passionate about data structures, algorithms, and continuous learning through hands-on projects and certifications.`,
+      body: ABOUT_INTRO_BODY,
     }),
   },
   {
@@ -180,11 +181,35 @@ async function seedAboutContent(): Promise<void> {
   console.log('About sections seeded (About Me, Experience, Education)');
 }
 
+async function seedAiKnowledgeBase(): Promise<void> {
+  for (const entry of AI_KNOWLEDGE_ENTRIES) {
+    await prisma.knowledgeBase.upsert({
+      where: { id: entry.id },
+      create: {
+        id: entry.id,
+        title: entry.title,
+        content: entry.content,
+        category: entry.category,
+        active: true,
+      },
+      update: {
+        title: entry.title,
+        content: entry.content,
+        category: entry.category,
+        active: true,
+      },
+    });
+  }
+
+  console.log('AI knowledge base seeded (profile, skills, services, experience, projects, FAQ)');
+}
+
 async function main(): Promise<void> {
   await seedRoles();
   await seedAdminUser();
   await seedSiteSettings();
   await seedAboutContent();
+  await seedAiKnowledgeBase();
 }
 
 main()

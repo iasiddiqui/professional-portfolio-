@@ -11,7 +11,7 @@ import { generateGeminiResponse } from '../../lib/gemini.js';
 import type { AskIshanResponseDto } from './ai.dto.js';
 import type { AskIshanInput } from './ai.validator.js';
 
-const ASK_ISHAN_CATEGORIES = ['about', 'services', 'faq', 'skills', 'experience', 'ai'];
+const ASK_ISHAN_CATEGORIES = ['about', 'services', 'faq', 'skills', 'experience', 'projects', 'ai'];
 
 function getRequestMeta(req: Request) {
   return {
