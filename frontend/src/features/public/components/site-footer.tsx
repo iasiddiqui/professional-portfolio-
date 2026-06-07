@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { VisitorCount } from '@/features/public/components/visitor-count';
 import { publicNavigation } from '@/features/public/config/navigation';
 import { ROUTES } from '@/constants/routes';
 
@@ -81,8 +82,9 @@ export function SiteFooter({
           </div>
         </div>
 
-        <div className="mt-10 border-t border-border/60 pt-6 text-center text-xs text-muted-foreground">
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row">
           <p>© {new Date().getFullYear()} {siteName}. All rights reserved.</p>
+          <VisitorCount />
         </div>
       </div>
     </footer>

@@ -48,6 +48,10 @@ export const API_ENDPOINTS = {
     ai: {
       ask: '/public/ai/ask',
     },
+    analytics: {
+      stats: '/public/analytics/stats',
+      visit: '/public/analytics/visit',
+    },
   },
   media: {
     upload: '/media/upload',

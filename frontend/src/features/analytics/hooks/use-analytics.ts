@@ -11,6 +11,5 @@ export function useAnalyticsOverview(params?: AnalyticsOverviewParams) {
     queryKey: QUERY_KEYS.analytics.overview(params?.range),
     queryFn: () => analyticsService.overview(params),
     staleTime: QUERY_STALE_TIME.short,
-    enabled: false,
   });
 }

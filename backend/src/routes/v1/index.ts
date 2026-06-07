@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { aiAdminRouter, aiPublicRouter } from '../../modules/ai/ai.routes.js';
+import { analyticsRouter } from '../../modules/analytics/analytics.routes.js';
 import { authRouter } from '../../modules/auth/auth.routes.js';
 import { blogCategoriesRouter } from '../../modules/blog-categories/blog-categories.routes.js';
 import { blogRouter } from '../../modules/blog/blog.routes.js';
@@ -28,6 +29,7 @@ v1Router.use('/leads', leadsRouter);
 v1Router.use('/testimonials', testimonialsRouter);
 v1Router.use('/resume', resumeRouter);
 v1Router.use('/knowledge-base', knowledgeBaseRouter);
+v1Router.use('/analytics', analyticsRouter);
 v1Router.use('/settings', settingsRouter);
 v1Router.use('/tags', tagsRouter);
 

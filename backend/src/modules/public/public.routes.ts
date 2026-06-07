@@ -1,7 +1,9 @@
 import { Router } from 'express';
 
-import { contactRateLimiter } from '../../middlewares/rate-limit.middleware.js';
 import { validateBody, validateParams, validateQuery } from '../../middlewares/validate.middleware.js';
+import { analyticsController } from '../analytics/analytics.controller.js';
+import { recordVisitSchema } from '../analytics/analytics.validator.js';
+import { contactRateLimiter } from '../../middlewares/rate-limit.middleware.js';
 import { publicController } from './public.controller.js';
 import {
   publicContactSchema,
@@ -15,6 +17,12 @@ const publicRouter = Router();
 
 publicRouter.get('/site', publicController.getSite);
 publicRouter.get('/about', publicController.getAbout);
+publicRouter.get('/analytics/stats', analyticsController.getPublicStats);
+publicRouter.post(
+  '/analytics/visit',
+  validateBody(recordVisitSchema),
+  analyticsController.recordVisit
+);
 publicRouter.get('/services', publicController.getServices);
 publicRouter.get('/testimonials', publicController.getTestimonials);
 publicRouter.get('/resume', publicController.getResume);

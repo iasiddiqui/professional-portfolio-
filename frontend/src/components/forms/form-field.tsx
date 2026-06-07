@@ -20,6 +20,7 @@ interface FormFieldProps<T extends FieldValues> {
   name: FieldPath<T>;
   label: string;
   placeholder?: string;
+  description?: string;
   type?: string;
   as?: 'input' | 'textarea';
   className?: string;
@@ -31,6 +32,7 @@ export function FormField<T extends FieldValues>({
   name,
   label,
   placeholder,
+  description,
   type = 'text',
   as = 'input',
   className,
@@ -38,6 +40,7 @@ export function FormField<T extends FieldValues>({
 }: FormFieldProps<T>) {
   const fieldId = String(name);
   const errorId = `${fieldId}-error`;
+  const descriptionId = description ? `${fieldId}-description` : undefined;
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordField = type === 'password';
 
@@ -56,12 +59,19 @@ export function FormField<T extends FieldValues>({
       render={({ field, fieldState }) => (
         <div className={cn('space-y-2', className)}>
           <Label htmlFor={fieldId}>{label}</Label>
+          {description ? (
+            <p id={descriptionId} className="text-sm text-muted-foreground">
+              {description}
+            </p>
+          ) : null}
           {as === 'textarea' ? (
             <Textarea
               id={fieldId}
               placeholder={placeholder}
               aria-invalid={fieldState.invalid || undefined}
-              aria-describedby={fieldState.error ? errorId : undefined}
+              aria-describedby={
+                [fieldState.error ? errorId : null, descriptionId].filter(Boolean).join(' ') || undefined
+              }
               name={field.name}
               value={field.value ?? ''}
               onBlur={field.onBlur}
@@ -76,7 +86,9 @@ export function FormField<T extends FieldValues>({
                 placeholder={placeholder}
                 className="pr-10"
                 aria-invalid={fieldState.invalid || undefined}
-                aria-describedby={fieldState.error ? errorId : undefined}
+                aria-describedby={
+                  [fieldState.error ? errorId : null, descriptionId].filter(Boolean).join(' ') || undefined
+                }
                 name={field.name}
                 value={field.value ?? ''}
                 onBlur={field.onBlur}
@@ -101,7 +113,9 @@ export function FormField<T extends FieldValues>({
               type={type}
               placeholder={placeholder}
               aria-invalid={fieldState.invalid || undefined}
-              aria-describedby={fieldState.error ? errorId : undefined}
+              aria-describedby={
+                [fieldState.error ? errorId : null, descriptionId].filter(Boolean).join(' ') || undefined
+              }
               name={field.name}
               value={field.value ?? ''}
               onBlur={field.onBlur}

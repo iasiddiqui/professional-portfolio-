@@ -1,9 +1,4 @@
-export type AnalyticsEventType =
-  | 'PAGE_VIEW'
-  | 'CONTACT_SUBMIT'
-  | 'RESUME_DOWNLOAD'
-  | 'PROJECT_VIEW'
-  | 'BLOG_VIEW';
+export type AnalyticsEventType = 'VISIT' | 'PAGE_VIEW' | 'CONTACT_REQUEST' | 'DOWNLOAD';
 
 export interface AnalyticsEvent {
   id: string;
@@ -15,13 +10,19 @@ export interface AnalyticsEvent {
 }
 
 export interface AnalyticsOverview {
-  totalEvents: number;
+  visitors: number;
   pageViews: number;
-  contactSubmits: number;
-  resumeDownloads: number;
+  contactRequests: number;
+  downloads: number;
   topPaths: Array<{ path: string; count: number }>;
+  range: '7d' | '30d' | '90d' | 'all';
 }
 
 export interface AnalyticsOverviewParams {
-  range?: '7d' | '30d' | '90d';
+  range?: '7d' | '30d' | '90d' | 'all';
+}
+
+export interface PublicVisitorStats {
+  visitors: number;
+  pageViews: number;
 }
