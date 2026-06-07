@@ -4,6 +4,7 @@ import { HTTP_STATUS } from '../../constants/http-status.js';
 import { blogRepository } from '../../repositories/blog.repository.js';
 import { projectRepository } from '../../repositories/project.repository.js';
 import { siteContentRepository } from '../../repositories/site-content.repository.js';
+import { resolveResumeFileName } from '../../utils/file-url.js';
 import { contactService } from '../contact/contact.service.js';
 import { AppError } from '../../utils/app-error.js';
 import {
@@ -88,6 +89,7 @@ export class PublicService {
       id: resume.id,
       title: resume.title,
       fileUrl: resume.fileUrl,
+      fileName: resolveResumeFileName(resume.fileName, resume.fileUrl),
       version: resume.version,
       updatedAt: resume.updatedAt.toISOString(),
     };

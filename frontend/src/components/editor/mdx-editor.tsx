@@ -66,7 +66,8 @@ export function MdxEditor({
       />
       {!compact ? (
         <p className="text-xs text-muted-foreground">
-          Supports MDX syntax — headings, code blocks, JSX components, and markdown formatting.
+          Supports MDX syntax — headings, code blocks, mermaid diagrams, and markdown formatting.
+          Use the Preview tab to see rendered output.
         </p>
       ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}

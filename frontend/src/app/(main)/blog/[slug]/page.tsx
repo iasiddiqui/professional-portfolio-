@@ -73,8 +73,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         ]}
       />
 
-      <section className="container mx-auto px-4 pb-10 pt-24">
-        <div className="mx-auto max-w-3xl">
+      <section className="mx-auto w-[80%] px-4 pb-10 pt-24">
+        <div>
           <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
             {post.category ? <span>{post.category.name}</span> : null}
             {post.publishedAt ? <span>{formatDate(post.publishedAt)}</span> : null}
@@ -101,14 +101,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       </section>
 
       {featuredImage ? (
-        <section className="container mx-auto px-4 pb-12">
-          <div className="relative mx-auto aspect-[16/9] max-w-4xl overflow-hidden rounded-2xl border border-border/60">
+        <section className="mx-auto w-[80%] px-4 pb-12">
+          <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-border/60">
             <MediaImage src={featuredImage} alt={post.title} fill className="object-cover" priority />
           </div>
         </section>
       ) : null}
 
-      <section className="container mx-auto max-w-3xl px-4 pb-16">
+      <section className="mx-auto w-[80%] px-4 pb-16">
         <div className="glass-panel rounded-2xl p-6 sm:p-10">
           <ContentRenderer
             content={post.content}
@@ -118,7 +118,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 pb-24 text-center">
+      <section className="mx-auto w-[80%] px-4 pb-24 text-center">
         <Link href={ROUTES.blog} className="text-sm text-accent hover:underline">
           ← Back to blog
         </Link>

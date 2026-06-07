@@ -98,7 +98,11 @@ export function ResumeFormDialog({ open, onOpenChange, resume }: ResumeFormDialo
               <ResumeUploadField
                 key={resume?.id ?? 'new'}
                 value={field.value}
+                fileName={form.watch('fileName')}
                 onChange={field.onChange}
+                onFileNameChange={(name) =>
+                  form.setValue('fileName', name, { shouldDirty: true })
+                }
                 onUploadSuccess={bumpVersion}
                 initialUseExternalUrl={Boolean(
                   resume?.fileUrl && !resume.fileUrl.includes('/uploads/')
@@ -108,6 +112,7 @@ export function ResumeFormDialog({ open, onOpenChange, resume }: ResumeFormDialo
             )}
           />
 
+          <input type="hidden" {...form.register('fileName')} />
           <input type="hidden" {...form.register('version')} />
 
           <div className="flex items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2.5 text-sm">

@@ -54,7 +54,11 @@ pnpm dev
 
 ## Documentation
 
-See the [`docs/`](./docs/) directory:
+**Start here:** [Complete Project Guide](./docs/PROJECT_GUIDE.md) — tech stack, DB, folder structure, deployment.
+
+**Workflows:** [Backend → Frontend flows](./docs/WORKFLOW.md) — step-by-step diagrams for every module.
+
+See also [`docs/`](./docs/):
 
 - [Architecture Overview](./docs/architecture/overview.md)
 - [API Documentation](./docs/api/README.md)

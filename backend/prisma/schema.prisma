@@ -293,6 +293,7 @@ model Resume {
   id        String   @id @default(cuid())
   title     String
   fileUrl   String
+  fileName  String   @default("")
   version   String
   isActive  Boolean  @default(false)
   createdAt DateTime @default(now())

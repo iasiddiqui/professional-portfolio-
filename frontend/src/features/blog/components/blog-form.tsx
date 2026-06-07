@@ -2,6 +2,8 @@
 
 import { Controller, useWatch, type UseFormReturn } from 'react-hook-form';
 
+import type { ContentFormat } from '@/features/blog/types/blog.types';
+
 import { FormCheckboxField } from '@/components/forms/form-checkbox-field';
 import { FormField } from '@/components/forms/form-field';
 import { FeaturedImageField, SeoFields, BlogContentEditor } from '@/components/editor';
@@ -33,6 +35,7 @@ export function BlogForm({ form, onSubmit, submitLabel, isSubmitting = false, sy
   const { data: tags = [] } = useTags();
 
   const title = useWatch({ control: form.control, name: 'title' });
+  const contentFormat = useWatch({ control: form.control, name: 'contentFormat' }) as ContentFormat;
   const { markSlugManual } = useAutoSlugSync(form, { title, enabled: syncSlugFromTitle });
   const tagIds = useWatch({ control: form.control, name: 'tagIds' });
   const featuredImage = useWatch({ control: form.control, name: 'featuredImage' });
@@ -77,7 +80,7 @@ export function BlogForm({ form, onSubmit, submitLabel, isSubmitting = false, sy
                 render={({ field, fieldState }) => (
                   <BlogContentEditor
                     value={field.value}
-                    contentFormat={form.watch('contentFormat')}
+                    contentFormat={contentFormat}
                     onChange={field.onChange}
                     onContentFormatChange={(format) =>
                       form.setValue('contentFormat', format, { shouldDirty: true })

@@ -94,6 +94,7 @@ export interface PublicResume {
   id: string;
   title: string;
   fileUrl: string;
+  fileName: string;
   version: string;
   updatedAt: string;
 }

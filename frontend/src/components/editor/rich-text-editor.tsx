@@ -75,7 +75,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          'prose prose-sm dark:prose-invert max-w-none min-h-[280px] px-3 py-3 focus:outline-none',
+          'tiptap prose prose-sm dark:prose-invert max-w-none min-h-[280px] px-3 py-3 focus:outline-none',
       },
     },
     onUpdate: ({ editor: currentEditor }) => {

@@ -43,8 +43,18 @@ const TAB_CONFIG: Record<
 
 const PREVIEW_HINT = 'Live preview — how your post will look when published.';
 
-function tabForFormat(format: ContentFormat): Exclude<EditorTab, 'preview'> {
+function initialTabForFormat(format: ContentFormat): EditorTab {
   if (format === 'HTML') return 'rich';
+  return 'mdx';
+}
+
+function resolveTabForFormat(format: ContentFormat, currentTab: EditorTab): EditorTab {
+  if (currentTab === 'preview') return currentTab;
+
+  if (format === 'HTML') {
+    return currentTab === 'html' ? 'html' : 'rich';
+  }
+
   return 'mdx';
 }
 
@@ -89,14 +99,10 @@ export function BlogContentEditor({
   className,
 }: BlogContentEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activeTab, setActiveTab] = useState<EditorTab>(() => tabForFormat(contentFormat));
+  const [activeTab, setActiveTab] = useState<EditorTab>(() => initialTabForFormat(contentFormat));
 
   useEffect(() => {
-    setActiveTab((current) => {
-      if (current === 'preview') return current;
-      const next = tabForFormat(contentFormat);
-      return current === next ? current : next;
-    });
+    setActiveTab((current) => resolveTabForFormat(contentFormat, current));
   }, [contentFormat]);
 
   const content = value ?? '';
@@ -203,7 +209,7 @@ export function BlogContentEditor({
       {activeTab === 'preview' ? (
         <div className="min-h-[320px] overflow-auto rounded-md border bg-muted/20 p-6">
           {content.trim() ? (
-            <ContentRenderer content={content} contentFormat={contentFormat} />
+            <ContentRenderer content={content} contentFormat={contentFormat} variant="preview" />
           ) : (
             <p className="text-sm text-muted-foreground">Nothing to preview yet.</p>
           )}

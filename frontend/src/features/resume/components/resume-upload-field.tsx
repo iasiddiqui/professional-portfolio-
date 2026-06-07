@@ -10,12 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { resumeService } from '@/features/resume/services/resume.service';
 import { getErrorMessage } from '@/lib/errors';
+import { resolveResumeFileName } from '@/lib/file-url';
 import { resolveMediaUrl } from '@/lib/media-url';
 import { cn } from '@/lib/utils';
 
 interface ResumeUploadFieldProps {
   value: string;
+  fileName?: string;
   onChange: (url: string) => void;
+  onFileNameChange?: (filename: string) => void;
   onUploadSuccess?: () => void;
   initialUseExternalUrl?: boolean;
   error?: string;
@@ -34,13 +37,11 @@ function fileLabelFromUrl(url: string): string {
   }
 }
 
-function isUploadedFile(url: string): boolean {
-  return url.includes('/uploads/');
-}
-
 export function ResumeUploadField({
   value,
+  fileName,
   onChange,
+  onFileNameChange,
   onUploadSuccess,
   initialUseExternalUrl = false,
   error,
@@ -53,6 +54,7 @@ export function ResumeUploadField({
     mutationFn: (file: File) => resumeService.upload(file),
     onSuccess: (result) => {
       onChange(result.url);
+      onFileNameChange?.(result.filename);
       setUseExternalUrl(false);
       onUploadSuccess?.();
     },
@@ -66,17 +68,19 @@ export function ResumeUploadField({
   };
 
   const previewUrl = value ? resolveMediaUrl(value) : null;
-  const fileLabel = value ? fileLabelFromUrl(value) : '';
-  const showUploadedCard = Boolean(value) && !useExternalUrl && isUploadedFile(value);
+  const fileLabel = resolveResumeFileName(fileName, value);
+  const showUploadedCard = Boolean(value) && !useExternalUrl;
 
   const switchToUpload = () => {
     setUseExternalUrl(false);
     onChange('');
+    onFileNameChange?.('');
   };
 
   const switchToUrl = () => {
     setUseExternalUrl(true);
     onChange('');
+    onFileNameChange?.('');
   };
 
   return (
@@ -145,7 +149,10 @@ export function ResumeUploadField({
                     size="icon"
                     className="h-8 w-8"
                     aria-label="Remove file"
-                    onClick={() => onChange('')}
+                    onClick={() => {
+                      onChange('');
+                      onFileNameChange?.('');
+                    }}
                     disabled={uploadMutation.isPending}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -190,7 +197,10 @@ export function ResumeUploadField({
         <div className="space-y-2">
           <Input
             value={value}
-            onChange={(event) => onChange(event.target.value)}
+            onChange={(event) => {
+              onChange(event.target.value);
+              onFileNameChange?.(fileLabelFromUrl(event.target.value));
+            }}
             placeholder="https://example.com/resume.pdf"
             spellCheck={false}
           />

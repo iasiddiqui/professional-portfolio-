@@ -2,6 +2,7 @@ import { PERMISSIONS, hasPermission } from '../../constants/permissions.js';
 import { HTTP_STATUS } from '../../constants/http-status.js';
 import { resumeRepository } from '../../repositories/resume.repository.js';
 import { AppError } from '../../utils/app-error.js';
+import { resolveResumeFileName } from '../../utils/file-url.js';
 import { mapResumeToDto } from './resume.dto.js';
 import type {
   CreateResumeInput,
@@ -38,6 +39,7 @@ export class ResumeService {
     const resume = await resumeRepository.create({
       title: input.title,
       fileUrl: input.fileUrl,
+      fileName: resolveResumeFileName(input.fileName, input.fileUrl),
       version: input.version,
       isActive: false,
     });
@@ -61,6 +63,14 @@ export class ResumeService {
     const resume = await resumeRepository.update(id, {
       ...(fields.title !== undefined ? { title: fields.title } : {}),
       ...(fields.fileUrl !== undefined ? { fileUrl: fields.fileUrl } : {}),
+      ...(fields.fileName !== undefined || fields.fileUrl !== undefined
+        ? {
+            fileName: resolveResumeFileName(
+              fields.fileName ?? existing.fileName,
+              fields.fileUrl ?? existing.fileUrl
+            ),
+          }
+        : {}),
       ...(fields.version !== undefined ? { version: fields.version } : {}),
       ...(isActive === false ? { isActive: false } : {}),
     });

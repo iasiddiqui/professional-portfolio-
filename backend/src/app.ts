@@ -66,9 +66,14 @@ export function createApp() {
   app.use(
     '/uploads',
     express.static(getUploadDir(), {
-      setHeaders(res) {
+      setHeaders(res, filePath) {
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+
+        if (filePath.endsWith('.pdf')) {
+          res.setHeader('Content-Type', 'application/pdf');
+        }
       },
     })
   );

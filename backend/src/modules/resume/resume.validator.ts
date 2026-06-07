@@ -23,6 +23,7 @@ const resumeFileUrlSchema = z
 const resumeFieldsSchema = z.object({
   title: z.string().trim().min(1).max(200),
   fileUrl: resumeFileUrlSchema,
+  fileName: z.string().trim().max(255).optional(),
   version: z.string().trim().min(1).max(50),
   isActive: z.boolean().default(false),
 });

@@ -81,6 +81,7 @@ export interface PublicResumeDto {
   id: string;
   title: string;
   fileUrl: string;
+  fileName: string;
   version: string;
   updatedAt: string;
 }

@@ -2,6 +2,7 @@ export interface Resume {
   id: string;
   title: string;
   fileUrl: string;
+  fileName: string;
   version: string;
   isActive: boolean;
   createdAt: string;
@@ -30,6 +31,7 @@ export interface ResumeListResult {
 export interface CreateResumePayload {
   title: string;
   fileUrl: string;
+  fileName?: string;
   version: string;
   isActive?: boolean;
 }

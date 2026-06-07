@@ -122,4 +122,26 @@
     height: 0;
     pointer-events: none;
   }
+
+  /* Markdown rendered output — readable document-style typography */
+  .markdown-content {
+    @apply text-foreground;
+    word-wrap: break-word;
+  }
+
+  .markdown-content--full {
+    @apply max-w-none;
+  }
+
+  .markdown-content--compact {
+    @apply max-w-none text-[0.9375rem];
+  }
+
+  .markdown-content :where(img) {
+    @apply my-4 max-w-full rounded-lg border border-border;
+  }
+
+  .markdown-content :where(input[type='checkbox']) {
+    @apply mr-2 accent-accent;
+  }
 }

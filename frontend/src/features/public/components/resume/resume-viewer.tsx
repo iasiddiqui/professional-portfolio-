@@ -2,6 +2,8 @@ import { Download, ExternalLink } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import type { PublicResume } from '@/features/public/types/public.types';
+import { resolveResumeFileName } from '@/lib/file-url';
+import { getPdfEmbedUrl, isPdfUrl } from '@/lib/pdf-url';
 import { formatDate } from '@/utils/date';
 
 interface ResumeViewerProps {
@@ -10,6 +12,10 @@ interface ResumeViewerProps {
 }
 
 export function ResumeViewer({ resume, fileUrl }: ResumeViewerProps) {
+  const embedUrl = getPdfEmbedUrl(fileUrl, resume.fileName);
+  const showPdfPreview = isPdfUrl(fileUrl);
+  const downloadName = resolveResumeFileName(resume.fileName, fileUrl);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -28,7 +34,7 @@ export function ResumeViewer({ resume, fileUrl }: ResumeViewerProps) {
             </a>
           </Button>
           <Button asChild size="sm">
-            <a href={fileUrl} download rel="noreferrer">
+            <a href={fileUrl} download={downloadName} rel="noreferrer">
               <Download className="mr-2 h-4 w-4" />
               Download
             </a>
@@ -36,13 +42,20 @@ export function ResumeViewer({ resume, fileUrl }: ResumeViewerProps) {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border/60 bg-muted/10">
-        <iframe
-          src={`${fileUrl}#toolbar=1&navpanes=0&view=FitH`}
-          title={`${resume.title} preview`}
-          className="h-[min(80vh,900px)] w-full bg-background"
-        />
-      </div>
+      {showPdfPreview ? (
+        <div className="overflow-hidden rounded-xl border border-border/60 bg-muted/10">
+          <iframe
+            src={embedUrl}
+            title={`${resume.title} preview`}
+            className="h-[min(80vh,900px)] w-full bg-background"
+          />
+        </div>
+      ) : (
+        <div className="rounded-xl border border-border/60 bg-muted/10 p-8 text-center text-sm text-muted-foreground">
+          <p>Preview is not available for this file type.</p>
+          <p className="mt-2">Use Open or Download above to view the document.</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -48,7 +48,7 @@ export class ResumeController {
       res,
       {
         url: stored.url,
-        filename: req.file.originalname,
+        filename: stored.filename,
         mimeType: req.file.mimetype,
         size: stored.size,
       },

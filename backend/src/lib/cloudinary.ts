@@ -66,6 +66,7 @@ export async function uploadToCloudinary(
     folder: string;
     resourceType: CloudinaryResourceType;
     publicId?: string;
+    overwrite?: boolean;
   }
 ): Promise<CloudinaryUploadResult> {
   ensureConfigured();
@@ -77,6 +78,9 @@ export async function uploadToCloudinary(
       {
         folder: options.folder,
         resource_type: options.resourceType,
+        access_mode: 'public',
+        type: 'upload',
+        ...(options.overwrite ? { overwrite: true, invalidate: true } : {}),
         ...(options.publicId ? { public_id: options.publicId, use_filename: false } : {}),
       }
     );
@@ -120,6 +124,60 @@ export function isCloudinaryUrl(url: string): boolean {
 
 export function inferCloudinaryResourceType(mimetype: string): CloudinaryResourceType {
   if (mimetype.startsWith('video/')) return 'video';
-  if (mimetype.startsWith('image/')) return 'image';
+  if (mimetype.startsWith('image/') || mimetype === 'application/pdf') return 'image';
   return 'raw';
+}
+
+function parseCloudinaryAssetUrl(
+  url: string
+): { publicId: string; resourceType: CloudinaryResourceType } | null {
+  if (!isCloudinaryUrl(url)) return null;
+
+  const match = url.match(
+    /res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\/(?:v\d+\/)?([^?]+)/
+  );
+
+  if (!match?.[1] || !match[2]) return null;
+
+  return {
+    resourceType: match[1] as CloudinaryResourceType,
+    publicId: decodeURIComponent(match[2]),
+  };
+}
+
+function getCloudinaryPrivateDownloadUrl(url: string): string {
+  const asset = parseCloudinaryAssetUrl(url);
+  if (!asset) return url;
+
+  configureCloudinary();
+
+  const format = asset.publicId.match(/\.([a-z0-9]+)$/i)?.[1] ?? 'pdf';
+
+  return cloudinary.utils.private_download_url(asset.publicId, format, {
+    resource_type: asset.resourceType,
+    type: 'upload',
+    expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
+  });
+}
+
+/** Deliverable URL — public image/upload assets use CDN URL; raw files use authenticated download. */
+export function getCloudinaryDeliveryUrl(url: string): string {
+  if (!isCloudinaryConfigured()) return url;
+
+  const asset = parseCloudinaryAssetUrl(url);
+  if (!asset) return url;
+
+  if (asset.resourceType === 'raw') {
+    return getCloudinaryPrivateDownloadUrl(url);
+  }
+
+  return url;
+}
+
+export function resolveDeliverableFileUrl(url: string): string {
+  if (isCloudinaryUrl(url)) {
+    return getCloudinaryDeliveryUrl(url);
+  }
+
+  return url;
 }
