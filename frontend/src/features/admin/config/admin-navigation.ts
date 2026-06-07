@@ -8,6 +8,7 @@ import {
   MessageSquareQuote,
   Settings,
   Star,
+  UserRound,
 } from 'lucide-react';
 
 import { MODULE_PERMISSIONS, PERMISSIONS } from '@/constants/permissions';
@@ -58,6 +59,13 @@ export const adminNavigation: AdminNavSection[] = [
         href: ROUTES.admin.resume,
         icon: Star,
         permissions: MODULE_PERMISSIONS.resume.read,
+      },
+      {
+        id: 'about',
+        label: 'About',
+        href: ROUTES.admin.about,
+        icon: UserRound,
+        permissions: MODULE_PERMISSIONS.knowledgeBase.read,
       },
       {
         id: 'knowledge-base',
@@ -139,6 +147,12 @@ export const adminModules: Record<string, AdminModuleMeta> = {
     id: 'knowledge-base',
     title: 'Knowledge Base',
     description: 'Maintain AI knowledge entries used by Ask Ishan.',
+    permissions: MODULE_PERMISSIONS.knowledgeBase.read,
+  },
+  about: {
+    id: 'about',
+    title: 'About',
+    description: 'Edit your public About page — intro, experience, education, and other sections.',
     permissions: MODULE_PERMISSIONS.knowledgeBase.read,
   },
   leads: {

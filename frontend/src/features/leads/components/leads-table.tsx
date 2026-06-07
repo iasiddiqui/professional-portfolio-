@@ -19,8 +19,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { LeadSourceBadge } from '@/features/leads/components/lead-source-badge';
 import { LeadStatusBadge } from '@/features/leads/components/lead-status-badge';
-import type { Lead } from '@/features/leads/types/lead.types';
+import { LEAD_STATUS_LABELS, LEAD_PIPELINE_STATUSES } from '@/features/leads/config/lead.config';
+import { useUpdateLeadStatusMutation } from '@/features/leads/hooks/use-lead-mutations';
+import type { Lead, LeadStatus } from '@/features/leads/types/lead.types';
 import { ROUTES } from '@/constants/routes';
 import { formatDate, formatRelativeTime } from '@/utils/date';
 import { truncate } from '@/utils/string';
@@ -32,12 +35,15 @@ interface LeadsTableProps {
 }
 
 export function LeadsTable({ leads, canWrite, onDelete }: LeadsTableProps) {
+  const statusMutation = useUpdateLeadStatusMutation();
+
   return (
     <div className="rounded-lg border">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Contact</TableHead>
+            <TableHead>Source</TableHead>
             <TableHead>Project</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Received</TableHead>
@@ -59,6 +65,9 @@ export function LeadsTable({ leads, canWrite, onDelete }: LeadsTableProps) {
                 </div>
               </TableCell>
               <TableCell>
+                <LeadSourceBadge source={lead.source} />
+              </TableCell>
+              <TableCell>
                 <div className="text-sm">
                   <p>{lead.projectType ?? '—'}</p>
                   {lead.budget ? <p className="text-muted-foreground">{lead.budget}</p> : null}
@@ -68,7 +77,28 @@ export function LeadsTable({ leads, canWrite, onDelete }: LeadsTableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                <LeadStatusBadge status={lead.status} />
+                {canWrite ? (
+                  <select
+                    aria-label={`Update status for ${lead.name}`}
+                    className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    value={lead.status}
+                    disabled={statusMutation.isPending}
+                    onChange={(event) =>
+                      statusMutation.mutate({
+                        id: lead.id,
+                        status: event.target.value as LeadStatus,
+                      })
+                    }
+                  >
+                    {LEAD_PIPELINE_STATUSES.map((status) => (
+                      <option key={status} value={status}>
+                        {LEAD_STATUS_LABELS[status]}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <LeadStatusBadge status={lead.status} />
+                )}
               </TableCell>
               <TableCell>
                 <div className="text-sm">

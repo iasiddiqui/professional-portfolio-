@@ -8,6 +8,7 @@ import type {
   Lead,
   LeadListParams,
   LeadListResult,
+  LeadPipeline,
   LeadStats,
   UpdateLeadPayload,
   UpdateLeadStatusPayload,
@@ -38,6 +39,12 @@ export const leadService = {
 
   stats() {
     return apiRequest<LeadStats>(() => api.get<ApiResponse<LeadStats>>(`${API_ENDPOINTS.leads}/stats`));
+  },
+
+  pipeline(limit = 20) {
+    return apiRequest<LeadPipeline>(() =>
+      api.get<ApiResponse<LeadPipeline>>(`${API_ENDPOINTS.leads}/pipeline`, { params: { limit } })
+    );
   },
 
   getById(id: string) {

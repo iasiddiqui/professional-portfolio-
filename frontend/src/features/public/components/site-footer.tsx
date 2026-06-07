@@ -81,11 +81,8 @@ export function SiteFooter({
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row">
+        <div className="mt-10 border-t border-border/60 pt-6 text-center text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} {siteName}. All rights reserved.</p>
-          <Link href={ROUTES.login} className="transition-colors hover:text-foreground">
-            Admin login
-          </Link>
         </div>
       </div>
     </footer>

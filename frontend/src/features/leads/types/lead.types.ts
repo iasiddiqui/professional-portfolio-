@@ -1,4 +1,5 @@
 export type LeadStatus = 'NEW' | 'CONTACTED' | 'IN_PROGRESS' | 'CLOSED';
+export type LeadSource = 'CONTACT' | 'HIRE_ME' | 'CONSULTATION';
 
 export interface LeadNote {
   id: string;
@@ -16,17 +17,41 @@ export interface Lead {
   company: string | null;
   budget: string | null;
   projectType: string | null;
+  timeline: string | null;
+  preferredTime: string | null;
   message: string;
+  source: LeadSource;
   status: LeadStatus;
+  adminEmailSent: boolean;
+  confirmationEmailSent: boolean;
   notes: LeadNote[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface LeadPipelineItem {
+  id: string;
+  name: string;
+  email: string;
+  company: string | null;
+  projectType: string | null;
+  source: LeadSource;
+  status: LeadStatus;
+  createdAt: string;
+}
+
+export interface LeadPipeline {
+  NEW: LeadPipelineItem[];
+  CONTACTED: LeadPipelineItem[];
+  IN_PROGRESS: LeadPipelineItem[];
+  CLOSED: LeadPipelineItem[];
 }
 
 export interface LeadListParams {
   page?: number;
   limit?: number;
   status?: LeadStatus;
+  source?: LeadSource;
   search?: string;
   projectType?: string;
   dateFrom?: string;
@@ -59,7 +84,10 @@ export interface CreateLeadPayload {
   company?: string | null;
   budget?: string | null;
   projectType?: string | null;
+  timeline?: string | null;
+  preferredTime?: string | null;
   message: string;
+  source?: LeadSource;
   status?: LeadStatus;
 }
 

@@ -9,6 +9,7 @@ import type {
   CreateLeadInput,
   CreateLeadNoteInput,
   LeadListQueryInput,
+  LeadPipelineQueryInput,
   UpdateLeadInput,
   UpdateLeadStatusInput,
 } from './leads.validator.js';
@@ -22,6 +23,11 @@ export class LeadsController {
   stats = asyncHandler(async (_req: Request, res: Response) => {
     const stats = await leadsService.getStats();
     sendSuccess(res, stats);
+  });
+
+  pipeline = asyncHandler(async (req: Request, res: Response) => {
+    const pipeline = await leadsService.getPipeline(getValidatedQuery<LeadPipelineQueryInput>(req));
+    sendSuccess(res, pipeline);
   });
 
   getById = asyncHandler(async (req: Request, res: Response) => {

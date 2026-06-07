@@ -107,8 +107,24 @@ export interface ContactFormPayload {
   message: string;
 }
 
-export interface ContactSubmissionResponse {
+export interface HireMeFormPayload extends ContactFormPayload {
+  timeline?: string;
+}
+
+export interface ConsultationFormPayload {
+  name: string;
+  email: string;
+  company?: string;
+  projectType?: string;
+  preferredTime?: string;
+  message: string;
+}
+
+export interface LeadSubmissionResponse {
   id: string;
   message: string;
   emailSent: boolean;
 }
+
+/** @deprecated Use LeadSubmissionResponse */
+export type ContactSubmissionResponse = LeadSubmissionResponse;

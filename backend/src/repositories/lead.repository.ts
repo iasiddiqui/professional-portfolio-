@@ -1,4 +1,4 @@
-import type { LeadStatus, Prisma } from '@prisma/client';
+import type { LeadSource, LeadStatus, Prisma } from '@prisma/client';
 
 import { prisma } from '../lib/prisma.js';
 
@@ -16,11 +16,14 @@ export interface LeadListFilters {
   limit: number;
   skip: number;
   status?: LeadStatus;
+  source?: LeadSource;
   search?: string;
   projectType?: string;
   dateFrom?: Date;
   dateTo?: Date;
 }
+
+export type LeadSummary = Prisma.LeadGetPayload<Record<string, never>>;
 
 export class LeadRepository {
   private readonly include = {
@@ -34,6 +37,7 @@ export class LeadRepository {
     const where: Prisma.LeadWhereInput = {};
 
     if (filters.status) where.status = filters.status;
+    if (filters.source) where.source = filters.source;
     if (filters.projectType) where.projectType = filters.projectType;
 
     if (filters.search) {
@@ -75,6 +79,36 @@ export class LeadRepository {
 
   async update(id: string, data: Prisma.LeadUpdateInput): Promise<LeadWithNotes> {
     return prisma.lead.update({ where: { id }, data, include: this.include });
+  }
+
+  async updateEmailFlags(
+    id: string,
+    flags: { adminEmailSent: boolean; confirmationEmailSent: boolean }
+  ): Promise<void> {
+    await prisma.lead.update({
+      where: { id },
+      data: flags,
+    });
+  }
+
+  async findPipeline(limitPerStatus = 20): Promise<Record<LeadStatus, LeadSummary[]>> {
+    const statuses: LeadStatus[] = ['NEW', 'CONTACTED', 'IN_PROGRESS', 'CLOSED'];
+    const grouped = await Promise.all(
+      statuses.map((status) =>
+        prisma.lead.findMany({
+          where: { status },
+          orderBy: { createdAt: 'desc' },
+          take: limitPerStatus,
+        })
+      )
+    );
+
+    return {
+      NEW: grouped[0] ?? [],
+      CONTACTED: grouped[1] ?? [],
+      IN_PROGRESS: grouped[2] ?? [],
+      CLOSED: grouped[3] ?? [],
+    };
   }
 
   async delete(id: string): Promise<LeadWithNotes> {

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { AdminPageHeader } from '@/features/admin/components/admin-page-header';
 import { AdminContentStatsWidgets } from '@/features/admin/components/admin-content-stats-widgets';
 import { useAdminNavigation } from '@/features/admin/hooks/use-admin-navigation';
+import { LeadPipelinePreview } from '@/features/leads/components/lead-pipeline-board';
 import { LeadStatsWidgets } from '@/features/leads/components/lead-stats-widgets';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ROUTES } from '@/constants/routes';
@@ -48,6 +49,7 @@ export function AdminDashboardOverview() {
   const { user, hasPermission } = useAuth();
   const { flatItems } = useAdminNavigation();
   const canViewLeads = hasPermission(MODULE_PERMISSIONS.leads.read);
+  const canWriteLeads = hasPermission(MODULE_PERMISSIONS.leads.write);
   const canViewProjects = hasPermission(MODULE_PERMISSIONS.projects.read);
   const canViewBlog = hasPermission(MODULE_PERMISSIONS.blog.read);
   const showContentStats = canViewProjects || canViewBlog;
@@ -82,6 +84,9 @@ export function AdminDashboardOverview() {
             </Link>
           </div>
           <LeadStatsWidgets compact />
+          <div className="mt-6">
+            <LeadPipelinePreview canWrite={canWriteLeads} />
+          </div>
         </SlideUp>
       ) : null}
 

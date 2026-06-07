@@ -30,3 +30,12 @@ export function useLeadStats() {
     staleTime: QUERY_STALE_TIME.short,
   });
 }
+
+export function useLeadPipeline(limit = 20, enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.leads.pipeline(limit),
+    queryFn: () => leadService.pipeline(limit),
+    staleTime: QUERY_STALE_TIME.short,
+    enabled,
+  });
+}

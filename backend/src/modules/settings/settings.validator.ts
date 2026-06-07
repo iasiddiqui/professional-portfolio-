@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { emailTemplatesSchema } from './email-templates.validator.js';
+
 const optionalUrlSchema = z
   .union([z.string().url(), z.literal(''), z.null()])
   .optional()
@@ -15,6 +17,7 @@ const settingsFieldsSchema = z.object({
   ),
   socialLinks: z.record(z.string(), z.string()).nullable().optional(),
   seoDefaults: z.record(z.string(), z.unknown()).nullable().optional(),
+  emailTemplates: emailTemplatesSchema,
   maintenanceMode: z.boolean().default(false),
 });
 

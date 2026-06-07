@@ -21,7 +21,7 @@ export function PageHero({ eyebrow, title, description, actions, className }: Pa
               {eyebrow}
             </p>
           ) : null}
-          <h1 className="text-4xl font-semibold tracking-tight text-gradient sm:text-5xl lg:text-6xl">
+          <h1 className="pb-1 text-4xl font-semibold leading-[1.2] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
             {title}
           </h1>
           {description ? (

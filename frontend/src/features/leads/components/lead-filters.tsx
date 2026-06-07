@@ -10,12 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { LEAD_STATUS_OPTIONS, PROJECT_TYPE_OPTIONS } from '@/features/leads/config/lead.config';
-import type { LeadStatus } from '@/features/leads/types/lead.types';
+import {
+  LEAD_SOURCE_OPTIONS,
+  LEAD_STATUS_OPTIONS,
+  PROJECT_TYPE_OPTIONS,
+} from '@/features/leads/config/lead.config';
+import type { LeadSource, LeadStatus } from '@/features/leads/types/lead.types';
 
 export interface LeadFiltersState {
   search: string;
   status: LeadStatus | 'ALL';
+  source: LeadSource | 'ALL';
   projectType: string;
 }
 
@@ -32,7 +37,7 @@ export function LeadFilters({ filters, onChange }: LeadFiltersProps) {
         <Input
           value={filters.search}
           onChange={(event) => onChange({ ...filters, search: event.target.value })}
-          placeholder="Search name, email, company..."
+          placeholder="Search name, email, subject..."
           className="pl-9"
         />
       </div>
@@ -40,12 +45,28 @@ export function LeadFilters({ filters, onChange }: LeadFiltersProps) {
         value={filters.status}
         onValueChange={(value) => onChange({ ...filters, status: value as LeadStatus | 'ALL' })}
       >
-        <SelectTrigger className="w-full lg:w-[180px]">
+        <SelectTrigger className="w-full lg:w-[160px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">All statuses</SelectItem>
           {LEAD_STATUS_OPTIONS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={filters.source}
+        onValueChange={(value) => onChange({ ...filters, source: value as LeadSource | 'ALL' })}
+      >
+        <SelectTrigger className="w-full lg:w-[160px]">
+          <SelectValue placeholder="Source" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">All sources</SelectItem>
+          {LEAD_SOURCE_OPTIONS.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>

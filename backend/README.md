@@ -43,7 +43,7 @@ Controllers never call repositories directly.
 - **Validation:** Zod
 - **Security:** Helmet, CORS, rate limiting, HPP, XSS sanitization
 - **Auth (planned):** JWT + bcrypt
-- **Integrations (planned):** Resend, Gemini API, GitHub
+- **Integrations (planned):** Resend, Gemini API
 
 ## Prerequisites
 
@@ -88,7 +88,6 @@ docker compose up -d postgres backend
 | `JWT_REFRESH_SECRET` | Yes | Refresh token secret (≥32 chars) |
 | `GEMINI_API_KEY` | Yes | Google Gemini API key |
 | `RESEND_API_KEY` | Yes | Resend email API key |
-| `GITHUB_TOKEN` | Yes | GitHub personal access token |
 | `CORS_ORIGIN` | Yes | Allowed frontend origin |
 | `RATE_LIMIT_WINDOW_MS` | No | Rate limit window (default 15 min) |
 | `RATE_LIMIT_MAX` | No | Max requests per window (default 100) |

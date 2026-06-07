@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, DollarSign, Mail, Trash2, User } from 'lucide-react';
+import { Building2, CalendarClock, Clock3, DollarSign, Mail, Trash2, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -21,6 +21,7 @@ import {
   useDeleteLeadDialog,
 } from '@/features/leads/components/delete-lead-dialog';
 import { LeadNotesPanel } from '@/features/leads/components/lead-notes-panel';
+import { LeadSourceBadge } from '@/features/leads/components/lead-source-badge';
 import { LeadStatusBadge } from '@/features/leads/components/lead-status-badge';
 import { LEAD_STATUS_OPTIONS } from '@/features/leads/config/lead.config';
 import { useUpdateLeadStatus } from '@/features/leads/hooks/use-lead-mutations';
@@ -98,7 +99,10 @@ export function LeadDetailsView({ leadId }: LeadDetailsViewProps) {
               <CardTitle>Lead status</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <LeadStatusBadge status={lead.status} />
+              <div className="flex flex-wrap items-center gap-2">
+                <LeadStatusBadge status={lead.status} />
+                <LeadSourceBadge source={lead.source} />
+              </div>
               {canWrite ? (
                 <Select
                   value={lead.status}
@@ -127,9 +131,33 @@ export function LeadDetailsView({ leadId }: LeadDetailsViewProps) {
             <CardContent className="space-y-3 text-sm">
               <InfoRow icon={User} label="Name" value={lead.name} />
               <InfoRow icon={Mail} label="Email" value={lead.email} href={`mailto:${lead.email}`} />
-              <InfoRow icon={Building2} label="Company" value={lead.company ?? '—'} />
+              <InfoRow icon={Building2} label="Subject" value={lead.company ?? '—'} />
               <InfoRow icon={DollarSign} label="Budget" value={lead.budget ?? '—'} />
               <InfoRow label="Project type" value={lead.projectType ?? '—'} />
+              {lead.timeline ? (
+                <InfoRow icon={CalendarClock} label="Timeline" value={lead.timeline} />
+              ) : null}
+              {lead.preferredTime ? (
+                <InfoRow icon={Clock3} label="Preferred time" value={lead.preferredTime} />
+              ) : null}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Email automation</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Admin notification</span>
+                <span className="font-medium">{lead.adminEmailSent ? 'Sent' : 'Not sent'}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Auto-reply</span>
+                <span className="font-medium">
+                  {lead.confirmationEmailSent ? 'Sent' : 'Not sent'}
+                </span>
+              </div>
             </CardContent>
           </Card>
 

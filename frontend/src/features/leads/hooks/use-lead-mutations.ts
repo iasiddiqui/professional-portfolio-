@@ -40,6 +40,20 @@ export function useUpdateLead(id: string) {
   });
 }
 
+export function useUpdateLeadStatusMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: UpdateLeadStatusPayload['status'] }) =>
+      leadService.updateStatus(id, { status }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.leads.all });
+      toast.success('Lead status updated');
+    },
+    onError: (error) => toast.error(getErrorMessage(error, 'Failed to update status')),
+  });
+}
+
 export function useUpdateLeadStatus(id: string) {
   const queryClient = useQueryClient();
 

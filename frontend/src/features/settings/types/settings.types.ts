@@ -1,3 +1,5 @@
+import type { SiteEmailTemplates } from '@/features/settings/types/email-templates.types';
+
 export interface SiteSettings {
   id: string;
   siteName: string;
@@ -7,6 +9,7 @@ export interface SiteSettings {
   contactEmail: string | null;
   socialLinks: Record<string, string> | null;
   seoDefaults: Record<string, unknown> | null;
+  emailTemplates: SiteEmailTemplates | null;
   maintenanceMode: boolean;
   updatedAt: string;
 }
@@ -19,5 +22,6 @@ export interface UpdateSettingsPayload {
   contactEmail?: string | null;
   socialLinks?: Record<string, string> | null;
   seoDefaults?: Record<string, unknown> | null;
+  emailTemplates?: SiteEmailTemplates | null;
   maintenanceMode?: boolean;
 }

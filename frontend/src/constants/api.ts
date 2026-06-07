@@ -43,15 +43,10 @@ export const API_ENDPOINTS = {
     blog: '/public/blog',
     blogPost: (slug: string) => `/public/blog/${slug}`,
     contact: '/public/contact',
+    hireMe: '/public/hire-me',
+    consultation: '/public/consultation',
     ai: {
       ask: '/public/ai/ask',
-    },
-    github: {
-      overview: '/public/github',
-      stats: '/public/github/stats',
-      repos: '/public/github/repos',
-      languages: '/public/github/languages',
-      contributions: '/public/github/contributions',
     },
   },
   media: {

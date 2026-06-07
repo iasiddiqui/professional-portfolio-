@@ -10,6 +10,7 @@ import {
   leadIdParamSchema,
   leadListQuerySchema,
   leadNoteIdParamSchema,
+  leadPipelineQuerySchema,
   updateLeadSchema,
   updateLeadStatusSchema,
 } from './leads.validator.js';
@@ -20,6 +21,13 @@ leadsRouter.get(
   '/stats',
   authorizeStrict(PERMISSIONS.LEADS_READ),
   leadsController.stats
+);
+
+leadsRouter.get(
+  '/pipeline',
+  authorizeStrict(PERMISSIONS.LEADS_READ),
+  validateQuery(leadPipelineQuerySchema),
+  leadsController.pipeline
 );
 
 leadsRouter.get(

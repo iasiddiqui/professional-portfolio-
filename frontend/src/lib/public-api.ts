@@ -104,8 +104,30 @@ export const publicApi = {
       API_ENDPOINTS.public.blogPost(slug)
     ),
   submitContact: (payload: import('@/features/public/types/public.types').ContactFormPayload) =>
-    publicFetch<import('@/features/public/types/public.types').ContactSubmissionResponse>(
+    publicFetch<import('@/features/public/types/public.types').LeadSubmissionResponse>(
       API_ENDPOINTS.public.contact,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        cache: 'no-store',
+      }
+    ),
+
+  submitHireMe: (payload: import('@/features/public/types/public.types').HireMeFormPayload) =>
+    publicFetch<import('@/features/public/types/public.types').LeadSubmissionResponse>(
+      API_ENDPOINTS.public.hireMe,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        cache: 'no-store',
+      }
+    ),
+
+  submitConsultation: (
+    payload: import('@/features/public/types/public.types').ConsultationFormPayload
+  ) =>
+    publicFetch<import('@/features/public/types/public.types').LeadSubmissionResponse>(
+      API_ENDPOINTS.public.consultation,
       {
         method: 'POST',
         body: JSON.stringify(payload),

@@ -23,7 +23,7 @@ export const knowledgeBaseListQuerySchema = paginationQuerySchema.extend({
 });
 
 export const knowledgeBaseIdParamSchema = z.object({
-  id: z.string().cuid(),
+  id: z.string().trim().min(1),
 });
 
 export type CreateKnowledgeBaseInput = z.infer<typeof createKnowledgeBaseSchema>;

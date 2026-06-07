@@ -31,15 +31,6 @@ export const contactRateLimiter = rateLimit({
   statusCode: HTTP_STATUS.TOO_MANY_REQUESTS,
 });
 
-export const githubRateLimiter = rateLimit({
-  windowMs: env.GITHUB_RATE_LIMIT_WINDOW_MS,
-  max: env.GITHUB_RATE_LIMIT_MAX,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: formatErrorResponse('Too many GitHub requests, please try again later'),
-  statusCode: HTTP_STATUS.TOO_MANY_REQUESTS,
-});
-
 /** @deprecated Use authCredentialRateLimiter — kept for backwards compatibility. */
 export const authRateLimiter = rateLimit({
   windowMs: env.AUTH_RATE_LIMIT_WINDOW_MS,

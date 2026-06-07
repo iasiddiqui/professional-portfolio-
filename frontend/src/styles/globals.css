@@ -101,7 +101,14 @@
   }
 
   .text-gradient {
-    @apply bg-gradient-to-b from-foreground to-foreground/60 bg-clip-text text-transparent;
+    background-image: linear-gradient(to bottom, var(--foreground), var(--muted-foreground));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    /* bg-clip-text can clip descenders without extra line box space */
+    line-height: 1.25;
+    padding-bottom: 0.12em;
   }
 
   .tiptap:focus {

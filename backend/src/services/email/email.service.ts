@@ -1,12 +1,13 @@
-import { Resend } from 'resend';
+import { Resend, type CreateEmailOptions } from 'resend';
 
 import { env, requireEnvValue } from '../../config/env.js';
 import { logger } from '../../utils/logger.js';
 import {
   buildLeadAdminNotificationTemplate,
   buildLeadConfirmationTemplate,
-  type LeadEmailPayload,
 } from './email.templates.js';
+import { resolveSiteEmailTemplates } from './email-template.utils.js';
+import type { LeadEmailPayload, SiteEmailTemplates } from './email-templates.types.js';
 
 let resendClient: Resend | null = null;
 
@@ -22,11 +23,51 @@ export interface SendLeadEmailsInput {
   lead: LeadEmailPayload;
   siteName: string;
   notificationEmail: string;
+  emailTemplates?: SiteEmailTemplates | null;
 }
 
 export interface SendLeadEmailsResult {
   adminSent: boolean;
   confirmationSent: boolean;
+}
+
+async function sendResendEmail(
+  resend: Resend,
+  payload: CreateEmailOptions,
+  context: { leadId: string; kind: 'admin' | 'confirmation' }
+): Promise<boolean> {
+  try {
+    const { data, error } = await resend.emails.send(payload);
+
+    if (error) {
+      logger.error('Resend rejected email', {
+        leadId: context.leadId,
+        kind: context.kind,
+        to: payload.to,
+        error: error.message,
+      });
+      return false;
+    }
+
+    if (!data?.id) {
+      logger.error('Resend returned no email id', {
+        leadId: context.leadId,
+        kind: context.kind,
+        to: payload.to,
+      });
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    logger.error('Resend send failed', {
+      leadId: context.leadId,
+      kind: context.kind,
+      to: payload.to,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
 }
 
 export class EmailService {
@@ -39,47 +80,34 @@ export class EmailService {
     }
 
     const resend = getResendClient();
-    const adminTemplate = buildLeadAdminNotificationTemplate(input.lead, input.siteName);
-    const confirmationTemplate = buildLeadConfirmationTemplate(input.lead, input.siteName);
+    const templates = resolveSiteEmailTemplates(input.emailTemplates);
+    const adminTemplate = buildLeadAdminNotificationTemplate(input.lead, input.siteName, templates);
+    const confirmationTemplate = buildLeadConfirmationTemplate(input.lead, input.siteName, templates);
+    const leadId = input.lead.id;
 
-    const [adminResult, confirmationResult] = await Promise.allSettled([
-      resend.emails.send({
-        from: env.RESEND_FROM_EMAIL,
-        to: input.notificationEmail,
-        replyTo: input.lead.email,
-        subject: adminTemplate.subject,
-        html: adminTemplate.html,
-      }),
-      resend.emails.send({
-        from: env.RESEND_FROM_EMAIL,
-        to: input.lead.email,
-        subject: confirmationTemplate.subject,
-        html: confirmationTemplate.html,
-      }),
+    const [adminSent, confirmationSent] = await Promise.all([
+      sendResendEmail(
+        resend,
+        {
+          from: env.RESEND_FROM_EMAIL,
+          to: input.notificationEmail,
+          replyTo: input.lead.email,
+          subject: adminTemplate.subject,
+          html: adminTemplate.html,
+        },
+        { leadId, kind: 'admin' }
+      ),
+      sendResendEmail(
+        resend,
+        {
+          from: env.RESEND_FROM_EMAIL,
+          to: input.lead.email,
+          subject: confirmationTemplate.subject,
+          html: confirmationTemplate.html,
+        },
+        { leadId, kind: 'confirmation' }
+      ),
     ]);
-
-    const adminSent = adminResult.status === 'fulfilled';
-    const confirmationSent = confirmationResult.status === 'fulfilled';
-
-    if (!adminSent) {
-      logger.error('Failed to send admin lead notification email', {
-        leadId: input.lead.id,
-        error:
-          adminResult.status === 'rejected'
-            ? String(adminResult.reason)
-            : 'Unknown email failure',
-      });
-    }
-
-    if (!confirmationSent) {
-      logger.error('Failed to send lead confirmation email', {
-        leadId: input.lead.id,
-        error:
-          confirmationResult.status === 'rejected'
-            ? String(confirmationResult.reason)
-            : 'Unknown email failure',
-      });
-    }
 
     return { adminSent, confirmationSent };
   }

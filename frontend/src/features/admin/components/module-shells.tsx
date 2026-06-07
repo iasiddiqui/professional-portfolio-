@@ -181,6 +181,31 @@ export function ResumeModuleShell({
   );
 }
 
+// ─── About ───────────────────────────────────────────────────────────────────
+
+export function AboutModuleShell({
+  children,
+  title = 'About',
+  description = 'Edit your public About page — intro, experience, education, and other sections.',
+  breadcrumbs,
+  actions,
+}: Partial<Omit<ModuleShellProps, 'permissions' | 'moduleName'>> & { children: ReactNode }) {
+  return (
+    <ModuleShell
+      title={title}
+      description={description}
+      moduleName="About"
+      permissions={MODULE_PERMISSIONS.knowledgeBase.read}
+      breadcrumbs={
+        breadcrumbs ?? [{ label: 'Dashboard', href: ROUTES.admin.dashboard }, { label: 'About' }]
+      }
+      actions={actions}
+    >
+      {children}
+    </ModuleShell>
+  );
+}
+
 // ─── Knowledge Base ──────────────────────────────────────────────────────────
 
 export function KnowledgeBaseModuleShell({

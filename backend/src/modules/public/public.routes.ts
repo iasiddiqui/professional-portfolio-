@@ -5,6 +5,8 @@ import { validateBody, validateParams, validateQuery } from '../../middlewares/v
 import { publicController } from './public.controller.js';
 import {
   publicContactSchema,
+  publicConsultationSchema,
+  publicHireMeSchema,
   publicListQuerySchema,
   publicSlugParamSchema,
 } from './public.validator.js';
@@ -32,6 +34,20 @@ publicRouter.post(
   contactRateLimiter,
   validateBody(publicContactSchema),
   publicController.submitContact
+);
+
+publicRouter.post(
+  '/hire-me',
+  contactRateLimiter,
+  validateBody(publicHireMeSchema),
+  publicController.submitHireMe
+);
+
+publicRouter.post(
+  '/consultation',
+  contactRateLimiter,
+  validateBody(publicConsultationSchema),
+  publicController.submitConsultation
 );
 
 export { publicRouter };

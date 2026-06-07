@@ -28,6 +28,12 @@ enum LeadStatus {
   CLOSED
 }
 
+enum LeadSource {
+  CONTACT
+  HIRE_ME
+  CONSULTATION
+}
+
 enum MediaType {
   IMAGE
   DOCUMENT
@@ -231,20 +237,26 @@ model BlogPostTag {
 // ─── CRM & Content ────────────────────────────────────────────────────────────
 
 model Lead {
-  id          String     @id @default(cuid())
-  name        String
-  email       String
-  company     String?
-  budget      String?
-  projectType String?
-  message     String     @db.Text
-  status      LeadStatus @default(NEW)
-  notes       LeadNote[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id                    String     @id @default(cuid())
+  name                  String
+  email                 String
+  company               String?
+  budget                String?
+  projectType           String?
+  timeline              String?
+  preferredTime         String?
+  message               String     @db.Text
+  source                LeadSource @default(CONTACT)
+  status                LeadStatus @default(NEW)
+  adminEmailSent        Boolean    @default(false)
+  confirmationEmailSent Boolean    @default(false)
+  notes                 LeadNote[]
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
 
   @@index([email])
   @@index([status])
+  @@index([source])
   @@index([createdAt])
 }
 
@@ -373,6 +385,7 @@ model SiteSettings {
   contactEmail    String?
   socialLinks     Json?
   seoDefaults     Json?
+  emailTemplates  Json?
   maintenanceMode Boolean  @default(false)
   updatedAt       DateTime @updatedAt
 }

@@ -42,6 +42,14 @@ export class SettingsService {
                 : (input.seoDefaults as Prisma.InputJsonValue),
           }
         : {}),
+      ...(input.emailTemplates !== undefined
+        ? {
+            emailTemplates:
+              input.emailTemplates === null
+                ? Prisma.JsonNull
+                : (input.emailTemplates as Prisma.InputJsonValue),
+          }
+        : {}),
       ...(input.maintenanceMode !== undefined ? { maintenanceMode: input.maintenanceMode } : {}),
     });
 

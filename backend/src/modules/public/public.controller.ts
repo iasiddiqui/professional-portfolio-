@@ -5,7 +5,7 @@ import { asyncHandler } from '../../utils/async-handler.js';
 import { buildPaginationMeta, sendPaginated, sendSuccess } from '../../utils/api-response.js';
 import { getValidatedQuery } from '../../utils/validated-request.js';
 import { publicService } from './public.service.js';
-import type { PublicContactInput, PublicListQueryInput } from './public.validator.js';
+import type { PublicContactInput, PublicConsultationInput, PublicHireMeInput, PublicListQueryInput } from './public.validator.js';
 
 export class PublicController {
   getSite = asyncHandler(async (_req: Request, res: Response) => {
@@ -55,6 +55,16 @@ export class PublicController {
 
   submitContact = asyncHandler(async (req: Request, res: Response) => {
     const result = await publicService.submitContact(req.body as PublicContactInput);
+    sendSuccess(res, result, { status: HTTP_STATUS.CREATED, message: result.message });
+  });
+
+  submitHireMe = asyncHandler(async (req: Request, res: Response) => {
+    const result = await publicService.submitHireMe(req.body as PublicHireMeInput);
+    sendSuccess(res, result, { status: HTTP_STATUS.CREATED, message: result.message });
+  });
+
+  submitConsultation = asyncHandler(async (req: Request, res: Response) => {
+    const result = await publicService.submitConsultation(req.body as PublicConsultationInput);
     sendSuccess(res, result, { status: HTTP_STATUS.CREATED, message: result.message });
   });
 }

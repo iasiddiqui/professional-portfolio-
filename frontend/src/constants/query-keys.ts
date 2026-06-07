@@ -21,6 +21,7 @@ export const QUERY_KEYS = {
   leads: {
     all: ['leads'] as const,
     stats: ['leads', 'stats'] as const,
+    pipeline: (limit?: number) => ['leads', 'pipeline', limit] as const,
     list: (params?: unknown) => ['leads', 'list', params] as const,
     detail: (id: string) => ['leads', 'detail', id] as const,
   },

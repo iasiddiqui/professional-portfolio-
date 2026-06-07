@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { ArrowRight, Github, Mail } from 'lucide-react';
 
-import { ContentRenderer } from '@/features/public/components/content-renderer';
-import { GitHubSection } from '@/features/github/components/github-section';
+import { AboutPageSections } from '@/features/public/components/about/about-page-sections';
 import { PageHero } from '@/features/public/components/page-hero';
 import { JsonLd } from '@/components/seo/json-ld';
+import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
 import { buildBreadcrumbSchema, buildPersonSchema } from '@/lib/seo/json-ld';
 import { createStaticPageMetadata } from '@/lib/seo/page-metadata';
@@ -22,6 +24,24 @@ export default async function AboutPage() {
   const site = await getSeoSiteConfig();
   const about = await publicApi.getAbout().catch(() => null);
 
+  const heroDescription =
+    about?.site.siteDescription ??
+    'I design and ship polished digital products with a focus on clarity, performance, and maintainable systems.';
+
+  const heroActions = (
+    <>
+      <Button asChild size="lg">
+        <Link href={ROUTES.contact}>
+          Get in touch
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </Button>
+      <Button asChild variant="outline" size="lg">
+        <Link href={ROUTES.projects}>View projects</Link>
+      </Button>
+    </>
+  );
+
   if (!about) {
     return (
       <>
@@ -36,18 +56,21 @@ export default async function AboutPage() {
         />
         <PageHero
           eyebrow="About"
-          title="Engineering with intent"
-          description="I design and ship polished digital products with a focus on clarity, performance, and maintainable systems."
+          title="About Me"
+          description={heroDescription}
+          actions={heroActions}
         />
         <section className="container mx-auto px-4 pb-24">
           <div className="glass-panel mx-auto max-w-3xl rounded-2xl p-8 text-center text-sm text-muted-foreground">
             About content is unavailable right now. Please ensure the API is running.
           </div>
         </section>
-        <GitHubSection />
       </>
     );
   }
+
+  const socialLinks = about.site.socialLinks;
+  const githubUrl = socialLinks?.github;
 
   return (
     <>
@@ -62,32 +85,40 @@ export default async function AboutPage() {
       />
       <PageHero
         eyebrow="About"
-        title="Engineering with intent"
-        description={
-          about.site.siteDescription ??
-          'I design and ship polished digital products with a focus on clarity, performance, and maintainable systems.'
+        title="About Me"
+        description={heroDescription}
+        actions={
+          <>
+            {heroActions}
+            {githubUrl ? (
+              <Button asChild variant="ghost" size="lg">
+                <a href={githubUrl} target="_blank" rel="noopener noreferrer">
+                  <Github className="mr-2 h-4 w-4" />
+                  GitHub
+                </a>
+              </Button>
+            ) : (
+              <Button asChild variant="ghost" size="lg">
+                <Link href={ROUTES.contact}>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Email me
+                </Link>
+              </Button>
+            )}
+          </>
         }
       />
 
-      <section className="container mx-auto px-4 pb-12">
-        {about.sections.length > 0 ? (
-          <div className="mx-auto grid max-w-4xl gap-6">
-            {about.sections.map((section) => (
-              <article key={section.id} className="glass-panel rounded-2xl p-6 sm:p-8">
-                <h2 className="mb-4 text-xl font-semibold tracking-tight">{section.title}</h2>
-                <ContentRenderer content={section.content} className="text-muted-foreground" />
-              </article>
-            ))}
-          </div>
-        ) : (
+      {about.sections.length > 0 ? (
+        <AboutPageSections sections={about.sections} />
+      ) : (
+        <section className="container mx-auto px-4 pb-24">
           <div className="glass-panel mx-auto max-w-3xl rounded-2xl p-8 text-center text-sm text-muted-foreground">
-            About content will appear here once sections are added to the knowledge base under the
-            &quot;about&quot; category.
+            About content will appear here once sections are added in the admin About page.
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      <GitHubSection />
     </>
   );
 }

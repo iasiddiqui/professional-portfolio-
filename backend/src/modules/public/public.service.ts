@@ -17,7 +17,7 @@ import {
   type PublicSiteDto,
   type PublicTestimonialDto,
 } from './public.dto.js';
-import type { PublicContactInput, PublicListQueryInput } from './public.validator.js';
+import type { PublicContactInput, PublicConsultationInput, PublicHireMeInput, PublicListQueryInput } from './public.validator.js';
 
 export class PublicService {
   async getSite(): Promise<PublicSiteDto> {
@@ -159,6 +159,14 @@ export class PublicService {
 
   async submitContact(input: PublicContactInput) {
     return contactService.submitContact(input);
+  }
+
+  async submitHireMe(input: PublicHireMeInput) {
+    return contactService.submitHireMe(input);
+  }
+
+  async submitConsultation(input: PublicConsultationInput) {
+    return contactService.submitConsultation(input);
   }
 }
 

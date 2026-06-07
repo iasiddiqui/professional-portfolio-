@@ -3,11 +3,12 @@ import { HTTP_STATUS } from '../../constants/http-status.js';
 import { leadNoteRepository } from '../../repositories/lead-note.repository.js';
 import { leadRepository } from '../../repositories/lead.repository.js';
 import { AppError } from '../../utils/app-error.js';
-import { mapLeadToDto } from './leads.dto.js';
+import { mapLeadToDto, mapPipelineToDto } from './leads.dto.js';
 import type {
   CreateLeadInput,
   CreateLeadNoteInput,
   LeadListQueryInput,
+  LeadPipelineQueryInput,
   UpdateLeadInput,
   UpdateLeadStatusInput,
 } from './leads.validator.js';
@@ -23,6 +24,7 @@ export class LeadsService {
       limit,
       skip,
       status: query.status,
+      source: query.source,
       search: query.search,
       projectType: query.projectType,
       dateFrom: query.dateFrom,
@@ -34,6 +36,11 @@ export class LeadsService {
 
   async getStats() {
     return leadRepository.getStats();
+  }
+
+  async getPipeline(query: LeadPipelineQueryInput) {
+    const pipeline = await leadRepository.findPipeline(query.limit);
+    return mapPipelineToDto(pipeline);
   }
 
   async getById(id: string) {
@@ -51,7 +58,10 @@ export class LeadsService {
       company: input.company ?? null,
       budget: input.budget ?? null,
       projectType: input.projectType ?? null,
+      timeline: input.timeline ?? null,
+      preferredTime: input.preferredTime ?? null,
       message: input.message,
+      source: input.source,
       status: input.status,
     });
 
@@ -70,7 +80,10 @@ export class LeadsService {
       ...(input.company !== undefined ? { company: input.company } : {}),
       ...(input.budget !== undefined ? { budget: input.budget } : {}),
       ...(input.projectType !== undefined ? { projectType: input.projectType } : {}),
+      ...(input.timeline !== undefined ? { timeline: input.timeline } : {}),
+      ...(input.preferredTime !== undefined ? { preferredTime: input.preferredTime } : {}),
       ...(input.message !== undefined ? { message: input.message } : {}),
+      ...(input.source !== undefined ? { source: input.source } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
     });
 

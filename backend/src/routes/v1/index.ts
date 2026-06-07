@@ -4,7 +4,6 @@ import { aiAdminRouter, aiPublicRouter } from '../../modules/ai/ai.routes.js';
 import { authRouter } from '../../modules/auth/auth.routes.js';
 import { blogCategoriesRouter } from '../../modules/blog-categories/blog-categories.routes.js';
 import { blogRouter } from '../../modules/blog/blog.routes.js';
-import { githubPublicRouter } from '../../modules/github/github.routes.js';
 import { knowledgeBaseRouter } from '../../modules/knowledge-base/knowledge-base.routes.js';
 import { leadsRouter } from '../../modules/leads/leads.routes.js';
 import { mediaRouter } from '../../modules/media/media.routes.js';
@@ -19,7 +18,6 @@ const v1Router = Router();
 
 v1Router.use('/auth', authRouter);
 v1Router.use('/public/ai', aiPublicRouter);
-v1Router.use('/public/github', githubPublicRouter);
 v1Router.use('/ai', aiAdminRouter);
 v1Router.use('/public', publicRouter);
 v1Router.use('/projects', projectsRouter);

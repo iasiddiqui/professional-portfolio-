@@ -9,6 +9,7 @@ import { Loader } from '@/components/common/loader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SettingsModuleShell } from '@/features/admin/components/module-shells';
+import { EmailTemplatesEditor } from '@/features/settings/components/email-templates-editor';
 import { useUpdateSettings } from '@/features/settings/hooks/use-settings-mutations';
 import { useSettings } from '@/features/settings/hooks/use-settings';
 import {
@@ -143,6 +144,10 @@ export function SettingsModuleView() {
           </Button>
         ) : null}
       </form>
+
+      <div className="mt-6">
+        <EmailTemplatesEditor settings={settings} canWrite={canWrite} />
+      </div>
     </SettingsModuleShell>
   );
 }
