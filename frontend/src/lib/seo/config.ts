@@ -1,4 +1,5 @@
 import { APP_URL } from '@/constants/api';
+import { resolveAbsoluteMediaUrl } from '@/lib/media-url';
 
 export const SEO_DEFAULTS = {
   siteName: process.env.NEXT_PUBLIC_SITE_NAME ?? 'Portfolio',
@@ -38,6 +39,9 @@ export function absoluteUrl(path: string): string {
 
 export function resolveSeoImageUrl(image?: string | null): string | undefined {
   if (!image) return absoluteUrl(SEO_DEFAULTS.defaultImagePath);
+
+  const resolved = resolveAbsoluteMediaUrl(image);
+  if (resolved) return resolved;
 
   if (image.startsWith('http://') || image.startsWith('https://')) {
     return image;

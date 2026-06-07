@@ -5,7 +5,7 @@ import { HTTP_STATUS } from '../../constants/http-status.js';
 import { mediaRepository } from '../../repositories/media.repository.js';
 import { projectRepository } from '../../repositories/project.repository.js';
 import { AppError } from '../../utils/app-error.js';
-import { deleteUploadFile, extractFilenameFromUrl } from '../../utils/upload.js';
+import { deleteStoredFile } from '../../utils/storage.js';
 import { generateUniqueSlug } from '../../utils/slug.js';
 import { mapProjectToDto } from './projects.dto.js';
 import type {
@@ -174,10 +174,7 @@ export class ProjectsService {
     await projectRepository.delete(id);
 
     for (const media of existing.media) {
-      const filename = extractFilenameFromUrl(media.url);
-      if (filename) {
-        await deleteUploadFile(filename);
-      }
+      await deleteStoredFile(media.url, media.filename, media.mimeType);
       await mediaRepository.delete(media.id).catch(() => undefined);
     }
 

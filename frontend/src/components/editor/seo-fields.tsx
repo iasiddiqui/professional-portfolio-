@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { ImagePlus, Loader2, Trash2, Upload } from 'lucide-react';
-import Image from 'next/image';
+import { MediaImage } from '@/components/media/media-image';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -129,7 +129,7 @@ function FeaturedImageUpload({ previewUrl, onUpload, onClear }: FeaturedImageUpl
       {displayUrl ? (
         <div className="overflow-hidden rounded-lg border">
           <div className="relative aspect-video max-w-md">
-            <Image src={displayUrl} alt="Featured" fill className="object-cover" sizes="448px" />
+            <MediaImage src={displayUrl} alt="Featured" fill className="object-cover" sizes="448px" />
           </div>
           <div className="flex justify-end border-t p-3">
             <Button

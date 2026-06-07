@@ -1,7 +1,7 @@
 'use client';
 
 import { Clock, Pencil, Trash2 } from 'lucide-react';
-import Image from 'next/image';
+import { MediaImage } from '@/components/media/media-image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -99,7 +99,7 @@ export function BlogPostDetailsView({ postId }: BlogPostDetailsViewProps) {
           {post.featuredImage ? (
             <Card className="overflow-hidden">
               <div className="relative aspect-[16/9]">
-                <Image
+                <MediaImage
                   src={resolveMediaUrl(post.featuredImage)!}
                   alt={post.title}
                   fill

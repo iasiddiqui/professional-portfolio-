@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
+import { MediaImage } from '@/components/media/media-image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Clock } from 'lucide-react';
@@ -103,7 +103,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       {featuredImage ? (
         <section className="container mx-auto px-4 pb-12">
           <div className="relative mx-auto aspect-[16/9] max-w-4xl overflow-hidden rounded-2xl border border-border/60">
-            <Image src={featuredImage} alt={post.title} fill className="object-cover" priority />
+            <MediaImage src={featuredImage} alt={post.title} fill className="object-cover" priority />
           </div>
         </section>
       ) : null}

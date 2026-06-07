@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import { MediaImage } from '@/components/media/media-image';
 import { ArrowUpRight, Clock } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +27,7 @@ export function BlogCard({ post, className }: BlogCardProps) {
       <Link href={ROUTES.blogPost(post.slug)} className="block">
         {image ? (
           <div className="relative aspect-[16/9] overflow-hidden bg-muted/30">
-            <Image
+            <MediaImage
               src={image}
               alt={post.title}
               fill

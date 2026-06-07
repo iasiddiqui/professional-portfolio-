@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import { PERMISSIONS } from '../../constants/permissions.js';
-import { uploadSingleImage } from '../../middlewares/upload.middleware.js';
+import { uploadSingleMedia } from '../../middlewares/upload.middleware.js';
 import { requireAnyPermission } from '../../middlewares/role.middleware.js';
 import { authenticate } from '../../middlewares/auth.middleware.js';
 import { validateParams, validateQuery } from '../../middlewares/validate.middleware.js';
@@ -14,7 +14,7 @@ mediaRouter.post(
   '/upload',
   authenticate,
   requireAnyPermission(PERMISSIONS.MEDIA_WRITE, PERMISSIONS.PROJECTS_WRITE, PERMISSIONS.BLOG_WRITE),
-  uploadSingleImage,
+  uploadSingleMedia,
   validateQuery(uploadMediaQuerySchema),
   mediaController.upload
 );
@@ -22,7 +22,7 @@ mediaRouter.post(
 mediaRouter.delete(
   '/:id',
   authenticate,
-  requireAnyPermission(PERMISSIONS.MEDIA_WRITE, PERMISSIONS.PROJECTS_WRITE),
+  requireAnyPermission(PERMISSIONS.MEDIA_WRITE, PERMISSIONS.PROJECTS_WRITE, PERMISSIONS.BLOG_WRITE),
   validateParams(mediaIdParamSchema),
   mediaController.delete
 );

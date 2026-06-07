@@ -4,7 +4,7 @@ import { HTTP_STATUS } from '../../constants/http-status.js';
 import { asyncHandler } from '../../utils/async-handler.js';
 import { buildPaginationMeta, sendPaginated, sendSuccess } from '../../utils/api-response.js';
 import { AppError } from '../../utils/app-error.js';
-import { getPublicUploadUrl } from '../../utils/upload.js';
+import { storeUploadedFile } from '../../utils/storage.js';
 import { getValidatedQuery } from '../../utils/validated-request.js';
 import { resumeService } from './resume.service.js';
 import type {
@@ -30,17 +30,27 @@ export class ResumeController {
   });
 
   upload = asyncHandler(async (req: Request, res: Response) => {
-    if (!req.file) {
+    if (!req.file?.buffer) {
       throw new AppError('No file uploaded', HTTP_STATUS.BAD_REQUEST);
     }
+
+    const stored = await storeUploadedFile(
+      {
+        buffer: req.file.buffer,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        originalname: req.file.originalname,
+      },
+      'resumes'
+    );
 
     sendSuccess(
       res,
       {
-        url: getPublicUploadUrl(req.file.filename),
+        url: stored.url,
         filename: req.file.originalname,
         mimeType: req.file.mimetype,
-        size: req.file.size,
+        size: stored.size,
       },
       { status: HTTP_STATUS.CREATED, message: 'Resume file uploaded successfully' }
     );

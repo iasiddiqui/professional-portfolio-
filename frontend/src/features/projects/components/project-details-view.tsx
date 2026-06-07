@@ -1,7 +1,7 @@
 'use client';
 
 import { ExternalLink, Eye, EyeOff, Github, Pencil, Star, Trash2 } from 'lucide-react';
-import Image from 'next/image';
+import { MediaImage } from '@/components/media/media-image';
 import Link from 'next/link';
 
 import { ErrorState } from '@/components/common/error-state';
@@ -113,7 +113,7 @@ export function ProjectDetailsView({ projectId }: ProjectDetailsViewProps) {
           {project.thumbnail ? (
             <Card className="overflow-hidden">
               <div className="relative aspect-[16/9] w-full">
-                <Image
+                <MediaImage
                   src={resolveMediaUrl(project.thumbnail.url)!}
                   alt={project.title}
                   fill
@@ -155,7 +155,7 @@ export function ProjectDetailsView({ projectId }: ProjectDetailsViewProps) {
                 <div className="grid gap-4 sm:grid-cols-2">
                   {project.gallery.map((image) => (
                     <div key={image.id} className="relative aspect-video overflow-hidden rounded-lg border">
-                      <Image
+                      <MediaImage
                         src={resolveMediaUrl(image.url)!}
                         alt={image.alt ?? project.title}
                         fill

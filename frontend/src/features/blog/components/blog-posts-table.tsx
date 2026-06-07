@@ -1,7 +1,7 @@
 'use client';
 
 import { Clock, Eye, EyeOff, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import Image from 'next/image';
+import { MediaImage } from '@/components/media/media-image';
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
@@ -130,7 +130,7 @@ export function BlogPostsTable({
                   <div className="flex items-center gap-3">
                     <div className="relative h-12 w-16 overflow-hidden rounded-md bg-muted">
                       {post.featuredImage ? (
-                        <Image
+                        <MediaImage
                           src={resolveMediaUrl(post.featuredImage)!}
                           alt={post.title}
                           fill

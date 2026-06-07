@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { ImagePlus, Loader2, Trash2, Upload } from 'lucide-react';
-import Image from 'next/image';
+import { MediaImage } from '@/components/media/media-image';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -64,7 +64,7 @@ export function ImageUploadField({
       {value ? (
         <div className="relative overflow-hidden rounded-lg border bg-muted/30">
           <div className="relative aspect-video w-full max-w-sm">
-            <Image
+            <MediaImage
               src={resolveMediaUrl(value.url)!}
               alt={value.alt ?? label}
               fill
@@ -90,7 +90,7 @@ export function ImageUploadField({
           {uploadMutation.isPending ? (
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           ) : (
-            <ImagePlus className="h-8 w-8 text-muted-foreground" />
+            <MediaImagePlus className="h-8 w-8 text-muted-foreground" />
           )}
           <div>
             <p className="font-medium">Upload thumbnail</p>
@@ -172,24 +172,40 @@ export function GalleryUploadField({
           ) : (
             <Upload className="mr-2 h-4 w-4" />
           )}
-          Add images
+          Add media
         </Button>
       </div>
 
-      <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFilesChange} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*,video/*"
+        multiple
+        className="hidden"
+        onChange={handleFilesChange}
+      />
 
       {items.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
             <div key={item.id} className="overflow-hidden rounded-lg border">
               <div className="relative aspect-video">
-                <Image
-                  src={resolveMediaUrl(item.url)!}
-                  alt={item.alt ?? 'Gallery image'}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, 33vw"
-                />
+                {item.mimeType.startsWith('video/') ? (
+                  <video
+                    src={resolveMediaUrl(item.url)!}
+                    className="h-full w-full object-cover"
+                    controls
+                    preload="metadata"
+                  />
+                ) : (
+                  <MediaImage
+                    src={resolveMediaUrl(item.url)!}
+                    alt={item.alt ?? 'Gallery image'}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, 33vw"
+                  />
+                )}
               </div>
               <div className="flex items-center justify-between gap-2 p-3">
                 <p className="truncate text-xs text-muted-foreground">{item.filename}</p>

@@ -1,7 +1,6 @@
-import DOMPurify from 'isomorphic-dompurify';
-
 import { cn } from '@/lib/utils';
 import type { ContentFormat } from '@/features/blog/types/blog.types';
+import { HtmlContent } from '@/features/public/components/html-content';
 
 interface ContentRendererProps {
   content: string;
@@ -57,20 +56,7 @@ function renderMarkdown(content: string) {
 }
 
 function renderHtml(content: string, className?: string) {
-  const sanitized = DOMPurify.sanitize(content, {
-    USE_PROFILES: { html: true },
-  });
-
-  return (
-    <div
-      className={cn(
-        'prose prose-sm dark:prose-invert max-w-none leading-relaxed',
-        '[&_a]:text-accent [&_a]:underline',
-        className
-      )}
-      dangerouslySetInnerHTML={{ __html: sanitized }}
-    />
-  );
+  return <HtmlContent content={content} className={className} />;
 }
 
 export function ContentRenderer({ content, contentFormat, className }: ContentRendererProps) {

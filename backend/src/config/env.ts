@@ -33,7 +33,12 @@ const envSchema = z.object({
   ADMIN_PASSWORD: z.string().min(8).optional(),
   PUBLIC_URL: z.string().url().default('http://localhost:4000'),
   UPLOAD_DIR: z.string().min(1).default('uploads'),
-  MAX_UPLOAD_SIZE_MB: z.coerce.number().int().positive().default(5),
+  MAX_UPLOAD_SIZE_MB: z.coerce.number().int().positive().default(10),
+  MAX_VIDEO_UPLOAD_SIZE_MB: z.coerce.number().int().positive().default(100),
+  CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
+  CLOUDINARY_API_KEY: z.string().min(1).optional(),
+  CLOUDINARY_API_SECRET: z.string().min(1).optional(),
+  CLOUDINARY_FOLDER: z.string().min(1).default('portfolio'),
 });
 
 const parsedEnvSchema = envSchema.transform((data) => ({
@@ -49,7 +54,17 @@ const parsedEnvSchema = envSchema.transform((data) => ({
 export type Env = z.infer<typeof parsedEnvSchema>;
 
 function parseEnv(): Env {
-  const result = parsedEnvSchema.safeParse(process.env);
+  const envInput = {
+    ...process.env,
+    CLOUDINARY_API_KEY:
+      process.env.CLOUDINARY_API_KEY ?? process.env.cloudinary_api_key,
+    CLOUDINARY_CLOUD_NAME:
+      process.env.CLOUDINARY_CLOUD_NAME ?? process.env.cloudinary_cloud_name,
+    CLOUDINARY_API_SECRET:
+      process.env.CLOUDINARY_API_SECRET ?? process.env.cloudinary_api_secret,
+  };
+
+  const result = parsedEnvSchema.safeParse(envInput);
 
   if (!result.success) {
     const formatted = result.error.issues

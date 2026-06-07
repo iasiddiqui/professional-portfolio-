@@ -10,11 +10,19 @@ import type { UploadMediaQueryInput } from './media.validator.js';
 
 export class MediaController {
   upload = asyncHandler(async (req: Request, res: Response) => {
-    if (!req.file) {
+    if (!req.file?.buffer) {
       throw new AppError('No file uploaded', HTTP_STATUS.BAD_REQUEST);
     }
 
-    const media = await mediaService.upload(req.file, getValidatedQuery<UploadMediaQueryInput>(req));
+    const media = await mediaService.upload(
+      {
+        buffer: req.file.buffer,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        originalname: req.file.originalname,
+      },
+      getValidatedQuery<UploadMediaQueryInput>(req)
+    );
 
     sendSuccess(res, media, { status: HTTP_STATUS.CREATED, message: 'File uploaded successfully' });
   });

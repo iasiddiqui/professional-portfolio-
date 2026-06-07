@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import { MediaImage } from '@/components/media/media-image';
 import { ArrowUpRight, Github, Globe } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,7 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
       <Link href={ROUTES.project(project.slug)} className="block">
         <div className="relative aspect-[16/10] overflow-hidden bg-muted/30">
           {thumbnail ? (
-            <Image
+            <MediaImage
               src={thumbnail}
               alt={project.thumbnail?.alt ?? project.title}
               fill

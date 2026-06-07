@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
+import { MediaImage } from '@/components/media/media-image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ExternalLink, Github } from 'lucide-react';
@@ -14,6 +14,7 @@ import { buildMetadata } from '@/lib/seo/metadata';
 import { getSeoSiteConfig } from '@/lib/seo/site-config';
 import { publicApi } from '@/lib/public-api';
 import { resolveMediaUrl } from '@/lib/media-url';
+import type { PublicProject } from '@/features/public/types/public.types';
 
 interface ProjectDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -47,7 +48,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
   const { slug } = await params;
   const site = await getSeoSiteConfig();
 
-  let project;
+  let project: PublicProject;
   try {
     project = await publicApi.getProject(slug);
   } catch {
@@ -102,7 +103,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
       {heroImage ? (
         <section className="container mx-auto px-4 pb-12">
           <div className="relative mx-auto aspect-[16/9] max-w-5xl overflow-hidden rounded-2xl border border-border/60 bg-muted/20">
-            <Image src={heroImage} alt={project.title} fill className="object-cover" priority />
+            <MediaImage src={heroImage} alt={project.title} fill className="object-cover" priority />
           </div>
         </section>
       ) : null}
@@ -147,7 +148,11 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                       key={media.id}
                       className="relative aspect-video overflow-hidden rounded-xl border border-border/60"
                     >
-                      <Image src={url} alt={media.alt ?? project.title} fill className="object-cover" />
+                      {media.mimeType.startsWith('video/') ? (
+                        <video src={url} className="h-full w-full object-cover" controls preload="metadata" />
+                      ) : (
+                        <MediaImage src={url} alt={media.alt ?? project.title} fill className="object-cover" />
+                      )}
                     </div>
                   );
                 })}

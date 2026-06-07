@@ -1,7 +1,7 @@
 'use client';
 
 import { Eye, EyeOff, MoreHorizontal, Pencil, Star, StarOff, Trash2 } from 'lucide-react';
-import Image from 'next/image';
+import { MediaImage } from '@/components/media/media-image';
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
@@ -134,7 +134,7 @@ export function ProjectsTable({
                   <div className="flex items-center gap-3">
                     <div className="relative h-12 w-16 overflow-hidden rounded-md bg-muted">
                       {project.thumbnail ? (
-                        <Image
+                        <MediaImage
                           src={resolveMediaUrl(project.thumbnail.url)!}
                           alt={project.title}
                           fill
