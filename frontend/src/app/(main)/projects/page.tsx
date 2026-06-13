@@ -30,7 +30,6 @@ export default async function ProjectsPage() {
         ]}
       />
       <PageHero
-        eyebrow="Projects"
         title="Work that ships"
         description="A curated collection of published projects across product engineering, platforms, and tools."
       />

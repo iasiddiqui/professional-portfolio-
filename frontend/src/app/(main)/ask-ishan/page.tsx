@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return createStaticPageMetadata(
     ROUTES.askIshan,
     'Ask Ishan AI',
-    'Chat with an AI assistant trained on portfolio knowledge — services, experience, and project approach.'
+    'Chat with an AI assistant — ask about Ishan\'s portfolio or get general dev help and answers.'
   );
 }
 
@@ -17,9 +17,8 @@ export default function AskIshanPage() {
   return (
     <>
       <PageHero
-        eyebrow="Ask Ishan AI"
         title="Questions answered instantly"
-        description="Chat with an AI assistant trained on Ishan's portfolio knowledge base — services, experience, and project approach."
+        description="Chat with an AI assistant — ask about Ishan's portfolio, services, and projects, or get general development help."
       />
       <section className="container mx-auto max-w-4xl px-4 pb-24">
         <AskIshanChat />

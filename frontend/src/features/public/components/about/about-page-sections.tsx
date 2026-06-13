@@ -64,6 +64,8 @@ export function AboutPageSections({ sections }: AboutPageSectionsProps) {
               const kind = getTimelineSectionKind(section.title);
 
               if (parsed.format !== 'timeline') {
+                if (parsed.format === 'legacy') return null;
+
                 return (
                   <section key={section.id} className="glass-panel rounded-2xl p-6 sm:p-8">
                     <h2 className="mb-4 text-xl font-semibold tracking-tight">{section.title}</h2>

@@ -29,7 +29,6 @@ export default async function ServicesPage() {
         ]}
       />
       <PageHero
-        eyebrow="Services"
         title="Built for ambitious products"
         description="From discovery to production — full-stack engineering, architecture, and delivery for teams that care about quality."
       />

@@ -20,6 +20,15 @@ import {
 } from './public.dto.js';
 import type { PublicContactInput, PublicConsultationInput, PublicHireMeInput, PublicListQueryInput } from './public.validator.js';
 
+function isStructuredAboutSection(content: string): boolean {
+  try {
+    const parsed = JSON.parse(content) as { format?: string };
+    return parsed.format === 'text' || parsed.format === 'timeline';
+  } catch {
+    return false;
+  }
+}
+
 export class PublicService {
   async getSite(): Promise<PublicSiteDto> {
     const settings = await siteContentRepository.getSiteSettings();
@@ -51,12 +60,14 @@ export class PublicService {
 
     return {
       site,
-      sections: sections.map((section) => ({
-        id: section.id,
-        title: section.title,
-        content: section.content,
-        category: section.category,
-      })),
+      sections: sections
+        .filter((section) => isStructuredAboutSection(section.content))
+        .map((section) => ({
+          id: section.id,
+          title: section.title,
+          content: section.content,
+          category: section.category,
+        })),
     };
   }
 

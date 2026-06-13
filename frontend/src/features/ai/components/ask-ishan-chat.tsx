@@ -1,27 +1,33 @@
 'use client';
 
-import { Loader2, Send, Sparkles } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Loader2, Send, Sparkles, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { ChatMessageContent } from '@/features/ai/components/chat-message-content';
 import { useAskIshan } from '@/features/ai/hooks/use-ai-mutations';
 import type { ChatMessage } from '@/features/ai/types/ai.types';
 import { cn } from '@/lib/utils';
 
 const STARTER_PROMPTS = [
   'What services do you offer?',
-  'Tell me about your tech stack.',
-  'How do I start a project with you?',
   'What kind of projects have you built?',
+  'Explain React hooks simply',
+  'How do I start a project with you?',
 ];
 
 function createSessionId() {
   return crypto.randomUUID();
 }
 
-export function AskIshanChat() {
+interface AskIshanChatProps {
+  className?: string;
+  onClose?: () => void;
+}
+
+export function AskIshanChat({ className, onClose }: AskIshanChatProps = {}) {
   const [sessionId] = useState(createSessionId);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -29,11 +35,22 @@ export function AskIshanChat() {
       id: 'welcome',
       role: 'assistant',
       content:
-        "Hi, I'm Ask Ishan AI. Ask me about Ishan's experience, services, projects, or how to collaborate.",
+        "Hi, I'm Ask Ishan AI. Ask about Ishan's work, services, and projects — or general dev questions, learning tips, and more.",
     },
   ]);
 
   const askMutation = useAskIshan();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+    const frame = requestAnimationFrame(() => scrollToBottom('instant'));
+    return () => cancelAnimationFrame(frame);
+  }, [messages, askMutation.isPending, scrollToBottom]);
 
   const canSend = input.trim().length > 0 && !askMutation.isPending;
 
@@ -61,22 +78,44 @@ export function AskIshanChat() {
     }
   };
 
-  const messageList = useMemo(() => messages, [messages]);
+  const isFloating = Boolean(onClose);
 
   return (
-    <div className="glass-panel flex h-[min(720px,calc(100vh-12rem))] flex-col overflow-hidden rounded-2xl">
-      <div className="flex items-center gap-3 border-b border-border/60 px-5 py-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-accent/10">
+    <div
+      className={cn(
+        'flex h-[min(720px,calc(100vh-12rem))] flex-col overflow-hidden rounded-2xl border border-border/60',
+        isFloating ? 'bg-card text-card-foreground shadow-2xl' : 'glass-panel',
+        className
+      )}
+    >
+      <div className="flex items-center gap-3 border-b border-border/60 bg-card px-5 py-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-accent/10">
           <Sparkles className="h-5 w-5 text-accent" />
         </div>
-        <div>
-          <p className="font-semibold">Ask Ishan AI</p>
-          <p className="text-xs text-muted-foreground">Powered by Gemini · Knowledge base aware</p>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-foreground">Ask Ishan AI</p>
+          <p className="text-xs text-muted-foreground">Portfolio-aware · General help too</p>
         </div>
+        {onClose ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            aria-label="Close chat"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        ) : null}
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5" aria-live="polite" aria-relevant="additions">
-        {messageList.map((message) => (
+      <div
+        className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-card px-5 py-5"
+        aria-live="polite"
+        aria-relevant="additions"
+      >
+        {messages.map((message) => (
           <div
             key={message.id}
             className={cn('flex', message.role === 'user' ? 'justify-end' : 'justify-start')}
@@ -85,11 +124,15 @@ export function AskIshanChat() {
               className={cn(
                 'max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
                 message.role === 'user'
-                  ? 'bg-accent text-accent-foreground'
-                  : 'border border-border/60 bg-muted/30 text-foreground'
+                  ? 'bg-accent text-white'
+                  : 'border border-border bg-muted text-foreground'
               )}
             >
-              {message.content}
+              {message.role === 'assistant' ? (
+                <ChatMessageContent content={message.content} />
+              ) : (
+                message.content
+              )}
             </div>
           </div>
         ))}
@@ -100,16 +143,17 @@ export function AskIshanChat() {
             Thinking...
           </div>
         ) : null}
+        <div ref={messagesEndRef} className="h-px shrink-0" aria-hidden />
       </div>
 
       {messages.length <= 1 ? (
-        <div className="flex flex-wrap gap-2 border-t border-border/60 px-5 py-3">
+        <div className="flex flex-wrap gap-2 border-t border-border/60 bg-card px-5 py-3">
           {STARTER_PROMPTS.map((prompt) => (
             <button
               key={prompt}
               type="button"
               onClick={() => void submitMessage(prompt)}
-              className="rounded-full border border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+              className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-foreground transition-colors hover:border-accent/40 hover:bg-muted"
             >
               {prompt}
             </button>
@@ -118,7 +162,7 @@ export function AskIshanChat() {
       ) : null}
 
       <form
-        className="flex gap-3 border-t border-border/60 p-4"
+        className="flex gap-3 border-t border-border/60 bg-card p-4"
         onSubmit={(event) => {
           event.preventDefault();
           void submitMessage(input);
@@ -127,9 +171,9 @@ export function AskIshanChat() {
         <Textarea
           value={input}
           onChange={(event) => setInput(event.target.value)}
-          placeholder="Ask about services, experience, or projects..."
+          placeholder="Ask about Ishan, projects, dev topics, or anything else..."
           rows={2}
-          className="min-h-[52px] resize-none"
+          className="min-h-[52px] resize-none bg-background text-foreground"
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
               event.preventDefault();

@@ -28,7 +28,6 @@ export default async function ConsultationPage() {
         ])}
       />
       <PageHero
-        eyebrow="Consultation"
         title="Book a strategy session"
         description="Get focused advice on architecture, delivery, or product direction. Tell me what you’re building and when you’d like to meet."
       />

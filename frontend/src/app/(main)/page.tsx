@@ -51,9 +51,6 @@ export default async function HomePage() {
       <GridBackground>
         <section className="container mx-auto px-4 pb-20 pt-24 sm:pt-28">
           <div className="mx-auto max-w-4xl text-center">
-            <p className="mb-4 text-xs font-medium uppercase tracking-[0.24em] text-muted-foreground">
-              Portfolio · Product Engineering
-            </p>
             <h1 className="text-4xl font-semibold tracking-tight text-gradient sm:text-6xl lg:text-7xl">
               {site?.siteName ?? 'Portfolio'}
             </h1>

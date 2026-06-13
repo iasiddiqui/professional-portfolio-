@@ -30,7 +30,6 @@ export default async function BlogPage() {
         ]}
       />
       <PageHero
-        eyebrow="Blog"
         title="Thinking in public"
         description="Long-form notes on architecture, delivery, and the craft of building software."
       />

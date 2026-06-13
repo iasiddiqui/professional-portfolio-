@@ -151,7 +151,7 @@ Focused on software engineering, web development, and computer science fundament
           role: 'Diploma · Computer Science & Engineering',
           organization: 'Maulana Azad National Urdu University, Bangalore',
           period: '2018 – 2021',
-          content: `Built a strong foundation in programming, databases, and core computer science concepts.`,
+          content: '',
         },
       ],
     }),

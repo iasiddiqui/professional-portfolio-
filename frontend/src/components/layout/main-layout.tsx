@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { PageTransition } from '@/components/animations/page-transition';
+import { AskIshanFloatingWidget } from '@/features/ai/components/ask-ishan-floating-widget';
 import { SiteFooter } from '@/features/public/components/site-footer';
 import { SiteHeader } from '@/features/public/components/site-header';
 import { VisitorTracker } from '@/features/public/components/visitor-tracker';
@@ -38,6 +39,7 @@ export async function MainLayout({ children }: MainLayoutProps) {
         <PageTransition>{children}</PageTransition>
       </main>
       <SiteFooter siteName={siteName} contactEmail={contactEmail} socialLinks={socialLinks} />
+      <AskIshanFloatingWidget />
     </div>
   );
 }

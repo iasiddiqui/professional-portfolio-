@@ -55,7 +55,6 @@ export default async function AboutPage() {
           ]}
         />
         <PageHero
-          eyebrow="About"
           title="About Me"
           description={heroDescription}
           actions={heroActions}
@@ -84,7 +83,6 @@ export default async function AboutPage() {
         ]}
       />
       <PageHero
-        eyebrow="About"
         title="About Me"
         description={heroDescription}
         actions={

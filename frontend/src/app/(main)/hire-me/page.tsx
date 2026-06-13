@@ -28,7 +28,6 @@ export default async function HireMePage() {
         ])}
       />
       <PageHero
-        eyebrow="Hire Me"
         title="Let’s work together"
         description="Looking for a senior engineer to ship your product? Share scope, budget, and timeline — I’ll respond with availability and next steps."
       />

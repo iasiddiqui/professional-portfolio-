@@ -30,7 +30,6 @@ export default async function ContactPage() {
         ])}
       />
       <PageHero
-        eyebrow="Contact"
         title="Let's build something great"
         description="Share your project goals and timeline. I'll follow up with availability, next steps, and how we can work together."
       />

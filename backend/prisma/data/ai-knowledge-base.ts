@@ -2,7 +2,7 @@ export const AI_KNOWLEDGE_ENTRIES = [
   {
     id: 'kb-profile',
     title: 'Profile',
-    category: 'about',
+    category: 'profile',
     content: `Name: Ishan Ahmad Siddiqui
 Title: Software Engineer & Full-Stack Developer
 Location: Hyderabad, India

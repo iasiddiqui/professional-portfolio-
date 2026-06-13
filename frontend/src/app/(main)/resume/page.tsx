@@ -40,7 +40,6 @@ export default async function ResumePage() {
         ])}
       />
       <PageHero
-        eyebrow="Resume"
         title="Experience on paper"
         description="A concise overview of skills, experience, and the kind of work I take on."
       />
